@@ -313,6 +313,29 @@
     return { set: (patch) => { Object.assign(state, patch); apply(); } };
   })();
 
+  // 상담 신청 팝업 — #consult 링크는 페이지 어디에나 있어서 한곳에서 받는다
+  const consultDlg = (() => {
+    const dlg = $("#consult");
+    if (!dlg) return null;
+    const open = () => {
+      if (dlg.open) return;
+      if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", "");
+      dlg.scrollTop = 0;
+      // 이미 보낸 뒤 다시 열면 완료 문구만 보이므로 닫기 버튼에 초점을 둔다
+      const first = $(".form-grid input, .form-grid select", dlg);
+      (first && !first.closest("[hidden]") ? first : $(".dlg-x", dlg)).focus();
+    };
+    const close = () => { if (dlg.close) dlg.close(); else dlg.removeAttribute("open"); };
+    dlg.addEventListener("click", (e) => {
+      if (e.target.closest("[data-close]")) { close(); return; }
+      if (e.target !== dlg) return; // 판 안쪽 여백을 눌렀을 때는 닫지 않는다
+      const b = dlg.getBoundingClientRect();
+      if (e.clientX < b.left || e.clientX > b.right || e.clientY < b.top || e.clientY > b.bottom) close();
+    });
+    if (location.hash === "#consult") open(); // 주소를 그대로 공유한 경우
+    return { open, close };
+  })();
+
   // 교육 대상 블록 → 일정표를 그 조건으로 맞춰 놓고 이동 / 상담 폼에 과정·지역 미리 채우기
   document.addEventListener("click", (e) => {
     const a = e.target.closest("a");
@@ -324,6 +347,7 @@
       pick("관심과정", a.dataset.presetCourse);
       pick("지역", a.dataset.presetRegion);
     }
+    if (consultDlg && a.getAttribute("href") === "#consult") { e.preventDefault(); consultDlg.open(); }
   });
 
   // ---------- 흐르는 띠 멈춤 ----------
@@ -413,9 +437,17 @@
     if (!form) return;
     const EP = window.__FORM_ENDPOINT__ || "";
     const isLocal = /^(localhost|127\.0\.0\.1|)$/.test(location.hostname); // 미리보기에서는 실제 접수로 보내지 않는다
-    // 동의는 사용자가 직접 켜야 의미가 있다 — 미리 켜 두거나 해제를 막지 않는다.
-    // 대신 제출할 때 다른 필수 항목과 같은 방식으로 막는다
+    // 기본 체크 + 해제하면 안내 후 되돌리기 — 전 사이트 공통 규칙(2026-09-18 사용자 지정).
+    // "기본 체크는 동의로 인정받기 어렵다"는 지적이 있었지만 사용자가 이 방식을 택했다.
+    // 되돌리려면 여기와 build.js 의 checked 만 빼면 된다(문구·details 구조는 그대로).
     const agree = $("#agree");
+    if (agree) agree.addEventListener("change", () => {
+      if (agree.checked) return;
+      alert("체크를 해제하시면 상담 신청이 어렵습니다.");
+      agree.checked = true;
+      agree.classList.remove("is-bad");
+      agree.removeAttribute("aria-invalid");
+    });
     const normTel = (p, v) => {
       v = String(v || "").replace(/\D/g, "");
       return v.length === 11 ? `${v.slice(0, 3)}-${v.slice(3, 7)}-${v.slice(7)}`

@@ -44,8 +44,11 @@ const SITE = {
   SUFFIX: " | 데일카네기 리더십 트레이닝",
   // 첫 사이트와 같은 규칙: 우클릭·F12·드래그·텍스트 선택 막기
   PROTECT: true,
-  // 방문 분석 스크립트가 필요하면 { src, site } 로 입력 (첫 사이트는 data-site="carnegie")
-  TRACKER: null,
+  // 방문 분석 스크립트 (첫 사이트는 data-site="carnegie").
+  // PC에서 전화 버튼을 누르면 번호 창을 띄우는 것도 이 스크립트가 전 사이트 공통으로 한다.
+  // ⚠ 키는 sangsang-workers/src/analytics.js 의 SITES·SITE_ORDER·SITE_GROUPS 세 곳에
+  //    모두 등록해야 한다. 빠뜨리면 /collect 가 400으로 버려 수집이 조용히 0건이 된다
+  TRACKER: { src: "https://xn--vb0by3y5wigqb.com/t.js", site: "ceotraining" },
 };
 
 const OUT = path.join(__dirname, "docs"); // 첫 사이트와 같은 배포 구조 (GitHub Pages: main 브랜치 /docs)
@@ -235,7 +238,7 @@ function schedRow(r) {
   return `<li class="sch-row st-${st}" data-groups="${groupsOf(r).join(" ")}" data-region="${r.region}" data-open="${isoDay(schedDate(r.open))}" data-close="${isoDay(closeDate(r))}" data-day="${esc(r.day || "")}" data-label="${esc(r.open)}">
         <div class="sch-date"><strong>${esc(r.open)}</strong><span>${esc(r.day || "")}</span></div>
         <div class="sch-main"><h3><a href="${regionFile(r.region)}">${esc(r.name)}</a>${r.gi ? ` <em>${esc(r.gi)}기</em>` : ""}</h3><p><a href="${courseFile(r.course)}">${esc(courseName)}</a> · ${esc(period)}</p></div>
-        <div class="sch-venue">${esc(reg.venue.replace(/\s*\(.*$/, ""))}</div>
+        <div class="sch-venue">${esc(reg.name)}</div>
         <div class="sch-end">
           <div class="sch-fee">${fee(r.fee)}${r.includes ? `<button type="button" class="fee-note" aria-label="${esc(r.name)} 수강료 포함 항목" data-note="${esc(r.includes)}">포함 항목</button>` : ""}</div>
           <div class="sch-st"><span class="st-badge">${ST_LABEL[st]}</span></div>
@@ -330,13 +333,6 @@ function concernCard(c) {
       </a>`;
 }
 // 그 지역에서만 참인 사실들 — 조합 페이지 본문을 지역마다 다르게 만드는 재료
-// "부산광역시 사상구 모라로 22" 같은 한 줄 주소를 시·도 / 시·구 / 나머지로 나눈다
-function splitAddr(addr) {
-  const p = String(addr).split(/\s+/);
-  if (p.length < 3) return { streetAddress: addr, addressCountry: "KR" };
-  return { streetAddress: p.slice(2).join(" "), addressLocality: p[1], addressRegion: p[0], addressCountry: "KR" };
-}
-
 function regionFacts(slug) {
   const r = REGIONS[slug];
   const br = BRANCH[r.branch];
@@ -353,7 +349,7 @@ function regionFacts(slug) {
     out.push(`${r.name}에서 열린 기수 가운데 가장 높은 기수는 ${top}기입니다. 한 지역에서 기수 번호가 이만큼 쌓였다는 것은 그동안 같은 과정이 반복해서 열렸다는 뜻입니다.`);
   }
   if (courses.length) out.push(`지금까지 ${r.name}에서 열린 과정은 ${courses.map((k) => COURSES[k].name).join(", ")}입니다.`);
-  out.push(`강의는 ${r.venue}에서 진행하고, 운영은 ${br.label}${iga(br.label)} 맡습니다.`);
+  out.push(`${r.name} 기수는 ${br.label}${iga(br.label)} 운영합니다. 수업 장소는 기수마다 달라 등록하신 분께 따로 안내해 드립니다.`);
   if (sisters.length) out.push(`${br.label}${eun(br.label)} ${r.name} 외에 ${sisters.map((x) => REGIONS[x].name).join(", ")}도 함께 관할합니다. 이 지역에 기수가 열리지 않는 때에는 관할 안의 다른 지역 기수로 안내해 드립니다.`);
   else out.push(`${br.label}${eun(br.label)} ${r.name} 지역을 단독으로 맡고 있어, 일정이 이 지역 사정에 맞춰 잡힙니다.`);
   if (alum.length) out.push(`수료 후에는 ${alum[0].name} 동문회에 들어갑니다. ${alum[0].acts.slice(0, 3).join(", ")} 같은 모임이 운영되고 있습니다.`);
@@ -382,15 +378,16 @@ function consultHtml(preset = {}) {
   const courseOpts = Object.values(COURSES).map((c) => `<option value="${esc(c.name)}"${sel(c.name, preset.course)}>${esc(c.name)} (${c.code})</option>`).join("")
     + `<option value="기업 맞춤 교육"${sel("기업 맞춤 교육", preset.course)}>기업 맞춤 교육 (사내·단체)</option><option value="기타 문의">기타 문의</option>`;
   const regionOpts = Object.values(REGIONS).map((r) => `<option value="${esc(r.name)}"${sel(r.name, preset.region)}>${esc(r.name)}</option>`).join("") + `<option value="기타/미정">기타/미정</option>`;
-  return `<section class="consult" id="consult">
-  <div class="wrap consult-in">
-    <div class="consult-copy reveal">
+  return `<dialog class="consult-dlg" id="consult" aria-labelledby="consultT">
+  <button type="button" class="dlg-x" data-close aria-label="닫기">${IC.close}</button>
+  <div class="consult-in">
+    <div class="consult-copy">
       <p class="eyebrow">${K.eyebrow}</p>
-      <h2 class="h-xl">${lines(K.title)}</h2>
+      <h2 class="h-xl" id="consultT">${lines(K.title)}</h2>
       <p class="lead">${esc(K.sub)}</p>
       <ul class="ticks">${K.points.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>
     </div>
-    <form class="form reveal" id="consultForm" novalidate>
+    <form class="form" id="consultForm" novalidate>
       <div class="form-grid">
         <label class="fd"><span>이름 <b>*</b></span><input type="text" name="이름" required placeholder="성함" autocomplete="name"></label>
         <label class="fd"><span>연락처 <b>*</b></span><span class="fd-tel"><select name="연락처앞" aria-label="휴대전화 앞자리"><option value="010" selected>010</option><option value="011">011</option><option value="016">016</option><option value="017">017</option><option value="018">018</option><option value="019">019</option></select><input type="tel" name="연락처" required placeholder="1234-5678" inputmode="numeric" aria-label="휴대전화 뒷자리" autocomplete="tel-national"></span></label>
@@ -401,7 +398,7 @@ function consultHtml(preset = {}) {
         <label class="fd fd-wide"><span>문의 내용</span><textarea name="문의내용" rows="4" placeholder="문의하시게 된 계기, 지금 겪고 있는 상황, 궁금한 점을 편하게 적어 주세요"></textarea></label>
       </div>
       <div class="agree">
-        <input type="checkbox" id="agree" name="동의" required>
+        <input type="checkbox" id="agree" name="동의" required checked>
         <label for="agree">개인정보 수집·이용에 동의합니다. <em>(필수)</em></label>
       </div>
       <details class="agree-more">
@@ -423,7 +420,7 @@ function consultHtml(preset = {}) {
       <p class="form-fail" id="consultFail" hidden role="alert" data-msg="접수가 전달되지 않았습니다. 잠시 뒤 다시 시도하시거나 전화로 문의해 주시면 바로 도와드리겠습니다." data-tel="${PHONE.tel}" data-tel-label="전화 상담"></p>
     </form>
   </div>
-</section>`;
+</dialog>`;
 }
 
 function footerHtml() {
@@ -932,7 +929,7 @@ ${consultHtml({ course: c.name })}`;
           "@type": "CourseInstance",
           name: `${r.name}${r.gi ? ` ${r.gi}기` : ""}`,
           courseMode: "onsite",
-          location: { "@type": "Place", name: REGIONS[r.region].venue.replace(/\s*\(.*$/, ""), address: { "@type": "PostalAddress", addressLocality: REGIONS[r.region].name, addressCountry: "KR" } },
+          location: { "@type": "Place", name: REGIONS[r.region].name, address: { "@type": "PostalAddress", addressLocality: REGIONS[r.region].name, addressCountry: "KR" } },
           startDate: isoDay(schedDate(r.open)),
           ...(isDayCourse(r) && closeDate(r) ? { endDate: isoDay(closeDate(r)) } : {}), // 수료일은 본사 확인분이 아니어서 내보내지 않는다 (data.js 주석 참고)
           courseSchedule: { "@type": "Schedule", repeatFrequency: isDayCourse(r) ? "P1D" : "P1W", ...(byDayLd(r.day).length ? { byDay: byDayLd(r.day) } : {}) },
@@ -994,7 +991,7 @@ function buildRegions() {
     const slugs = Object.keys(REGIONS).filter((s) => REGIONS[s].branch === b);
     if (!slugs.length) return "";
     return `<div class="reg-group reveal">
-      <h3><span>${esc(BRANCH[b].label)}</span><small>${esc(BRANCH[b].addr)}</small></h3>
+      <h3><span>${esc(BRANCH[b].label)}</span><small>${slugs.length}개 지역 관할</small></h3>
       <div class="grid-4">
         ${slugs.map(regionCard).join("\n        ")}
       </div>
@@ -1058,18 +1055,18 @@ function buildRegion(slug) {
 
 <section class="sec">
   <div class="wrap">
-    <h2 class="sr">${esc(r.name)} 강의장과 담당 지사</h2>
+    <h2 class="sr">${esc(r.name)} 수업 장소와 담당 지사</h2>
   </div>
   <div class="wrap split">
     <div class="venue reveal">
       <h3>${REGION.venueTitle}</h3>
-      <p>${esc(r.venue)}</p>
+      <p>${esc(R(REGION.venueWhere, r.name))}</p>
       <small>${esc(REGION.venueNote)}</small>
     </div>
     <div class="venue reveal">
       <h3>담당 지사</h3>
       <p>${esc(br.label)}</p>
-      <small>${esc(br.addr)}<br>지사 연락은 상담 신청이나 전화 상담 버튼으로 받고 있습니다.</small>
+      <small>지사 연락은 상담 신청이나 전화 상담 버튼으로 받고 있습니다.</small>
     </div>
   </div>
 </section>
@@ -1135,7 +1132,7 @@ ${consultHtml({ region: r.name })}`;
         : hasRows
           ? `${r.name}에서 열렸던 데일카네기 ${courses.map((k) => COURSES[k].code).join("·")} 과정과 다음 기수 안내.`
           : `${r.name} 지역 데일카네기 과정 개설 문의와 가까운 지역 기수 안내.`,
-      `강의장 ${r.venue.replace(/\s*\(.*$/, "")}, 담당 ${br.label}.`,
+      `담당 ${br.label}.`,
       mine.length ? `${r.name} 동문회 활동(${mine[0].acts.slice(0, 3).join("·")})까지 안내합니다.` : "수강료와 등록 절차를 안내합니다.",
     ].join(" "),
     hero: heroSm({ trail, eyebrow: `${REGION.eyebrow} · ${br.label}`, title: [`${r.name}에서 열리는`, "데일카네기 과정"], sub, actions: [["상담 신청", "#consult", true], ["개강 일정 보기", "#schedule"]] }),
@@ -1145,7 +1142,6 @@ ${consultHtml({ region: r.name })}`;
       {
         "@context": "https://schema.org", "@type": "EducationalOrganization",
         name: `데일카네기 ${br.label}`, parentOrganization: { "@type": "Organization", name: "데일카네기코리아" },
-        address: { "@type": "PostalAddress", ...splitAddr(br.addr) },
         areaServed: { "@type": "Place", name: r.name },
         ...(SITE.BASE_URL ? { url: abs(regionFile(slug)) } : {}),
       },
@@ -1629,18 +1625,18 @@ function buildCombo(slug, t) {
 
 <section class="sec">
   <div class="wrap">
-    <h2 class="sr">${esc(r.name)} 강의장과 담당 지사</h2>
+    <h2 class="sr">${esc(r.name)} 수업 장소와 담당 지사</h2>
   </div>
   <div class="wrap split">
     <div class="venue reveal">
       <h3>${REGION.venueTitle}</h3>
-      <p>${esc(r.venue)}</p>
+      <p>${esc(R(REGION.venueWhere, r.name))}</p>
       <small>${esc(REGION.venueNote)}</small>
     </div>
     <div class="venue reveal">
       <h3>담당 지사</h3>
       <p>${esc(br.label)}</p>
-      <small>${esc(br.addr)}<br>지사 연락은 상담 신청이나 전화 상담 버튼으로 받고 있습니다.</small>
+      <small>지사 연락은 상담 신청이나 전화 상담 버튼으로 받고 있습니다.</small>
     </div>
   </div>
 </section>
@@ -1695,7 +1691,7 @@ ${consultHtml(preset)}`;
   return layout({
     file: comboFile(slug, t),
     title: `${name}${active.length ? ` | ${active.length}개 기수 모집` : ""}`,
-    desc: `${R(t.regionLead, r.name)} ${active.length ? `${YEAR_LABEL} ${active.length}개 기수 모집 중${next ? `, 가장 빠른 개강 ${next.open}` : ""}.` : "개설 문의와 가까운 지역 기수를 안내합니다."} 강의장 ${r.venue.replace(/\s*\(.*$/, "")}, 담당 ${br.label}.`,
+    desc: `${R(t.regionLead, r.name)} ${active.length ? `${YEAR_LABEL} ${active.length}개 기수 모집 중${next ? `, 가장 빠른 개강 ${next.open}` : ""}.` : "개설 문의와 가까운 지역 기수를 안내합니다."} 담당 ${br.label}.`,
     hero: heroSm({ trail, badge: t.kw, eyebrow: `${br.label} · ${r.name}`, title: [`${r.name}에서 찾는`, t.kw], sub, actions: [["상담 신청", "#consult", true], ["개강 일정 보기", "#schedule"]] }),
     body, trail,
     ld: [
@@ -1770,8 +1766,8 @@ if (SITE.BASE_URL) {
   const urls = PAGE_LIST.map(([f]) => f).filter((f) => f !== "404.html").map((f) => `  <url><loc>${abs(f)}</loc><lastmod>${TODAY}</lastmod></url>`).join("\n");
   fs.writeFileSync(path.join(OUT, "sitemap.xml"), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`);
   fs.writeFileSync(path.join(OUT, "robots.txt"), `User-agent: *\nAllow: /\nSitemap: ${SITE.BASE_URL}/sitemap.xml\n`);
-  // GitHub Pages는 배포마다 CNAME 파일로 커스텀 도메인을 다시 읽는다 — 없으면 도메인 설정이 풀린다
-  fs.writeFileSync(path.join(OUT, "CNAME"), SITE.BASE_URL.replace(/^https?:\/\//, "").replace(/\/$/, "") + "\n");
+  // 도메인은 Cloudflare Worker 커스텀 도메인으로 붙였다(wrangler.toml).
+  // GitHub Pages로 되돌릴 일이 생기면 여기서 CNAME 파일을 다시 만들어야 한다 — 없으면 도메인 설정이 풀린다.
   // IndexNow 공용 키 확인 파일. 제출은 전문과외 워커의 중앙 크론이 매일 돌린다 —
   // 이 파일이 자기 도메인에서 열려야 그 사이트를 크론 목록에 넣을 수 있다
   fs.writeFileSync(path.join(OUT, `${INDEXNOW_KEY}.txt`), INDEXNOW_KEY);

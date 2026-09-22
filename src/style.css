@@ -397,9 +397,12 @@ ul,ol{margin:0;padding:0;list-style:none}
 /* ============================================================
    상담 신청
    ============================================================ */
-.consult{position:relative;padding:clamp(88px,10vw,136px) 0;background:var(--peach)}
-.consult-in{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:clamp(40px,6vw,96px);align-items:start}
-.consult-copy{position:sticky;top:calc(var(--hd-h) + 32px)}
+/* 상담 신청은 팝업이다. 페이지마다 하나씩 들어 있고 #consult 링크를 app.js가 받아 연다 */
+.consult-dlg{width:min(1000px,calc(100vw - 28px));max-height:min(92vh,980px);padding:44px 44px 40px;border:0;border-radius:24px;background:var(--peach);color:var(--text);overflow-y:auto;overscroll-behavior:contain;box-shadow:0 40px 80px -20px rgba(0,0,0,.5)}
+.consult-dlg::backdrop{background:rgba(11,12,16,.7);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.consult-dlg[open]{animation:riseIn .45s var(--ease)}
+.consult-in{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:clamp(32px,4vw,64px);align-items:start}
+.consult-copy{padding-right:8px}
 .consult-copy .lead{margin-top:20px}
 .ticks{margin-top:30px;display:grid;gap:12px}
 .ticks li{position:relative;padding-left:30px;font-size:15.5px;line-height:1.6;color:var(--text-2)}
@@ -560,4 +563,11 @@ ul,ol{margin:0;padding:0;list-style:none}
   *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
   .js .reveal{opacity:1;transform:none}
   .mq{overflow-x:auto}
+}
+
+/* 상담 팝업 — 좁은 화면에서는 화면을 꽉 채운다. 항목이 많아 판으로 띄우면 스크롤이 답답하다 */
+@media (max-width:640px){
+  .consult-dlg{width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;margin:0;border-radius:0;padding:54px 18px 32px}
+  .consult-dlg .dlg-x{margin:-40px -4px 0 0}
+  .consult-in{gap:26px}
 }

@@ -21,7 +21,7 @@ const bodyText = (f) => {
   h = h.replace(/<script[^]*?<\/script>/g, " ").replace(/<style[^]*?<\/style>/g, " ");
   const m = h.match(/<main[^>]*>([^]*)<\/main>/);
   if (m) h = m[1];
-  h = h.replace(/<section class="consult"[^]*?<\/section>/g, " ");
+  h = h.replace(/<dialog class="consult-dlg"[^]*?<\/dialog>/g, " ");
   return h.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 };
 // 6글자 조각을 문자열로 들고 있으면 400여 페이지에서 메모리가 터진다.

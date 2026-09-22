@@ -22,7 +22,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap">
-<link rel="stylesheet" href="style.css?v=muci136j">
+<link rel="stylesheet" href="style.css?v=mucjlipu">
 <script>document.documentElement.className += ' js';</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"과정 안내","description":"데일카네기 공개과정 안내","url":"https://ceotrainingcourse.com/courses.html","inLanguage":"ko-KR","dateModified":"2026-09-22"}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"홈","item":"https://ceotrainingcourse.com/"},{"@type":"ListItem","position":2,"name":"과정 안내"}]}</script>
@@ -170,15 +170,16 @@
     </div>
   </div>
 </section>
-<section class="consult" id="consult">
-  <div class="wrap consult-in">
-    <div class="consult-copy reveal">
+<dialog class="consult-dlg" id="consult" aria-labelledby="consultT">
+  <button type="button" class="dlg-x" data-close aria-label="닫기"><svg class="ic" viewBox="0 0 20 20" width="20" height="20" aria-hidden="true"><path d="m5 5 10 10M15 5 5 15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+  <div class="consult-in">
+    <div class="consult-copy">
       <p class="eyebrow">Contact</p>
-      <h2 class="h-xl"><span class="ln">어떤 과정이 맞는지</span> <span class="ln">몰라도 괜찮습니다.</span></h2>
+      <h2 class="h-xl" id="consultT"><span class="ln">어떤 과정이 맞는지</span> <span class="ln">몰라도 괜찮습니다.</span></h2>
       <p class="lead">지금 상황을 적어 주시면 맞는 과정과 가까운 지역의 일정을 안내해 드립니다. 확인 후 순서대로 연락드립니다.</p>
       <ul class="ticks"><li>접수는 개강 일주일 전 마감, 정원이 차면 먼저 마감합니다</li><li>등록 절차: 상담 → 지원서 → 서류 심사(약 1주) → 등록</li><li>기업 단체교육, 지역 개설 문의도 받습니다</li></ul>
     </div>
-    <form class="form reveal" id="consultForm" novalidate>
+    <form class="form" id="consultForm" novalidate>
       <div class="form-grid">
         <label class="fd"><span>이름 <b>*</b></span><input type="text" name="이름" required placeholder="성함" autocomplete="name"></label>
         <label class="fd"><span>연락처 <b>*</b></span><span class="fd-tel"><select name="연락처앞" aria-label="휴대전화 앞자리"><option value="010" selected>010</option><option value="011">011</option><option value="016">016</option><option value="017">017</option><option value="018">018</option><option value="019">019</option></select><input type="tel" name="연락처" required placeholder="1234-5678" inputmode="numeric" aria-label="휴대전화 뒷자리" autocomplete="tel-national"></span></label>
@@ -189,7 +190,7 @@
         <label class="fd fd-wide"><span>문의 내용</span><textarea name="문의내용" rows="4" placeholder="문의하시게 된 계기, 지금 겪고 있는 상황, 궁금한 점을 편하게 적어 주세요"></textarea></label>
       </div>
       <div class="agree">
-        <input type="checkbox" id="agree" name="동의" required>
+        <input type="checkbox" id="agree" name="동의" required checked>
         <label for="agree">개인정보 수집·이용에 동의합니다. <em>(필수)</em></label>
       </div>
       <details class="agree-more">
@@ -211,7 +212,7 @@
       <p class="form-fail" id="consultFail" hidden role="alert" data-msg="접수가 전달되지 않았습니다. 잠시 뒤 다시 시도하시거나 전화로 문의해 주시면 바로 도와드리겠습니다." data-tel="01026355114" data-tel-label="전화 상담"></p>
     </form>
   </div>
-</section>
+</dialog>
 </main>
 <footer class="ft">
   <div class="wrap">
@@ -239,8 +240,8 @@
 </div>
 <script type="application/json" id="schedData">[{"o":"2026-09-08","c":"2026-11-24","d":"09.08","w":"화","r":"seoul","k":"ceo","g":["ceo"]},{"o":"2026-09-07","c":"2026-11-30","d":"09.07","w":"월","r":"daegu","k":"ceo","g":["ceo"]},{"o":"2026-09-10","c":"2026-12-03","d":"09.10","w":"목","r":"yongin","k":"ceo","g":["ceo"]},{"o":"2026-09-14","c":"2026-12-07","d":"09.14","w":"월","r":"goyang","k":"ceo","g":["ceo"]},{"o":"2026-09-14","c":"2026-12-07","d":"09.14","w":"월","r":"hwaseong-osan","k":"ceo","g":["ceo"]},{"o":"2026-09-15","c":"2026-10-20","d":"09.15","w":"화","r":"daegu","k":"tla","g":["leader","ceo"]},{"o":"2026-09-15","c":"2026-12-01","d":"09.15","w":"화","r":"gwangju-hanam","k":"ceo","g":["ceo"]},{"o":"2026-09-16","c":"2026-11-25","d":"09.16","w":"수","r":"paju","k":"ceo","g":["ceo"]},{"o":"2026-09-16","c":"2026-12-02","d":"09.16","w":"수","r":"gwangmyeong","k":"ceo","g":["ceo"]},{"o":"2026-09-17","c":"2026-12-10","d":"09.17","w":"목","r":"siheung","k":"ceo","g":["ceo"]},{"o":"2026-09-29","c":"2026-12-22","d":"09.29","w":"화","r":"uijeongbu","k":"ceo","g":["ceo"]},{"o":"2026-09-29","c":"2026-12-22","d":"09.29","w":"화","r":"icheon","k":"ceo","g":["ceo"]},{"o":"2026-09-29","c":"2026-12-15","d":"09.29","w":"화","r":"busan","k":"ceo","g":["ceo"]},{"o":"2026-10-01","c":"2026-12-24","d":"10.01","w":"목","r":"suwon","k":"ceo","g":["ceo"]},{"o":"2026-10-01","c":"2026-12-17","d":"10.01","w":"목","r":"ulsan","k":"ceo","g":["ceo"]},{"o":"2026-10-01","c":"2026-12-17","d":"10.01","w":"목","r":"seoul","k":"ceo","g":["ceo"]},{"o":"2026-10-07","c":"2026-11-25","d":"10.07","w":"수","r":"seoul","k":"dcc","g":["personal"]},{"o":"2026-10-12","c":"2026-12-28","d":"10.12","w":"월","r":"sejong","k":"ceo","g":["ceo"]},{"o":"2026-10-12","c":"2026-12-28","d":"10.12","w":"월","r":"gwangju","k":"ceo","g":["ceo"]},{"o":"2026-10-13","c":"2026-12-29","d":"10.13","w":"화","r":"daejeon","k":"ceo","g":["ceo"]},{"o":"2026-10-21","c":"2026-11-25","d":"10.21","w":"수","r":"seoul","k":"tla","g":["leader"]},{"o":"2026-10-26","c":"2027-01-11","d":"10.26","w":"월","r":"jinju","k":"ceo","g":["ceo"]},{"o":"2026-11-03","c":"2026-12-22","d":"11.03","w":"화","r":"daegu","k":"dcc","g":["personal"]},{"o":"2026-11-04","c":"2026-12-02","d":"11.04","w":"수","r":"daegu","k":"hip","g":["personal"]},{"o":"2026-11-12","c":"2026-11-13","d":"11.12","w":"목·금","r":"seoul","k":"dylp","g":["leader"]}]</script>
 <script>window.__FORM_ENDPOINT__ = "https://script.google.com/macros/s/AKfycbwM_RUWCIPUWOAheguPujsuIAQ_XcxshA7SIbkLr_IBmOCalGZQI-B3qoZCXZsyeUrB/exec";</script>
-<script src="app.js?v=muci136j" defer></script>
-
+<script src="app.js?v=mucjlipu" defer></script>
+<script defer src="https://xn--vb0by3y5wigqb.com/t.js" data-site="ceotraining"></script>
 <script>
 (function(){
   function isFormEl(t){ return t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT'); }
