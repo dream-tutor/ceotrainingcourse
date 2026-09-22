@@ -11,11 +11,26 @@ node serve.js        # http://localhost:4173 미리보기 (PORT 로 바꿀 수 �
 node make-og.js      # 공유 카드(assets/og.png) 다시 뽑기 — src/og.html 을 고쳤을 때만
 ```
 
-## 배포 전에 반드시 할 것
+## 배포
 
-**`build.js` 상단 `SITE.BASE_URL`에 도메인을 넣어야 한다.** 비어 있으면
-전 페이지가 `noindex`로 나가고 `canonical`·`sitemap.xml`·`robots.txt`·빵부스러기 구조화 데이터가 빠진다.
-(도메인이 정해지기 전에 검색엔진에 잡히지 않게 하려고 일부러 이렇게 두었다. 빌드할 때마다 경고가 뜬다.)
+**ceotrainingcourse.com — Cloudflare Worker `ceotrainingcourse`** (2026-09-22 공개).
+GitHub Pages가 아니다. **푸시는 배포가 아니고**, 저장소는 소스 보관용이다.
+
+```bash
+node build.js
+npx wrangler deploy          # wrangler.toml 의 [assets] directory=./docs 를 올린다
+```
+
+이 폴더에는 wrangler가 설치돼 있지 않다. `sangsang-workers/node_modules/.bin/wrangler` 를
+`--config` 와 함께 쓰면 된다.
+
+- `wrangler.toml` 의 `routes` 가 `custom_domain = true` 라 배포할 때 Cloudflare DNS 레코드까지 만들어진다.
+  wrangler 로그인 토큰에는 DNS 편집 권한이 없지만 커스텀 도메인은 Workers API로 처리되어 이 경로로는 된다.
+- **`html_handling = "none"` 을 바꾸지 말 것.** 이 사이트는 주소가 전부 `.html` 이다.
+  기본값(`auto-trailing-slash`)이면 `/foo.html` 을 `/foo` 로 넘겨 canonical·sitemap과 어긋난다.
+  `/` 는 `src/worker.js` 가 `index.html` 로 이어 준다.
+- `SITE.BASE_URL` 을 비우면 전 페이지가 `noindex` 로 나가고 canonical·sitemap·robots가 빠진다.
+  도메인을 바꿀 때만 건드린다.
 
 ## 페이지 구성 (460개)
 
