@@ -468,6 +468,8 @@
         box.appendChild(a);
       }
       box.hidden = false;
+      // 팝업 안에서는 이 문구가 스크롤 밖에 있을 수 있다 — 접수가 안 됐는데 못 보고 넘어가면 안 된다
+      if (box.scrollIntoView) box.scrollIntoView({ block: "nearest" });
     };
     form.addEventListener("input", (e) => { e.target.classList.remove("is-bad"); e.target.removeAttribute("aria-invalid"); });
     form.addEventListener("change", (e) => { e.target.classList.remove("is-bad"); e.target.removeAttribute("aria-invalid"); });

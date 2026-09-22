@@ -291,7 +291,7 @@ ul,ol{margin:0;padding:0;list-style:none}
 .sch-count{margin:22px 2px 12px;font-size:14.5px;color:var(--text-3)}
 .sch-count b{color:var(--text);font-weight:700}
 .sch-list{border-radius:24px;border:1px solid var(--line);background:#fff;overflow:hidden}
-.sch-row{display:grid;grid-template-columns:104px minmax(0,1fr) minmax(0,220px) 124px 92px 88px;align-items:center;gap:20px;padding:22px 28px;border-top:1px solid var(--line);transition:background .25s}
+.sch-row{display:grid;grid-template-columns:104px minmax(0,1fr) 124px 92px 88px;align-items:center;gap:20px;padding:22px 28px;border-top:1px solid var(--line);transition:background .25s}
 .sch-row:first-child,.sch-row.is-first{border-top-color:transparent}
 .sch-row:hover{background:#fcfbf8}
 .sch-end{display:contents}

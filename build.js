@@ -238,7 +238,6 @@ function schedRow(r) {
   return `<li class="sch-row st-${st}" data-groups="${groupsOf(r).join(" ")}" data-region="${r.region}" data-open="${isoDay(schedDate(r.open))}" data-close="${isoDay(closeDate(r))}" data-day="${esc(r.day || "")}" data-label="${esc(r.open)}">
         <div class="sch-date"><strong>${esc(r.open)}</strong><span>${esc(r.day || "")}</span></div>
         <div class="sch-main"><h3><a href="${regionFile(r.region)}">${esc(r.name)}</a>${r.gi ? ` <em>${esc(r.gi)}기</em>` : ""}</h3><p><a href="${courseFile(r.course)}">${esc(courseName)}</a> · ${esc(period)}</p></div>
-        <div class="sch-venue">${esc(reg.name)}</div>
         <div class="sch-end">
           <div class="sch-fee">${fee(r.fee)}${r.includes ? `<button type="button" class="fee-note" aria-label="${esc(r.name)} 수강료 포함 항목" data-note="${esc(r.includes)}">포함 항목</button>` : ""}</div>
           <div class="sch-st"><span class="st-badge">${ST_LABEL[st]}</span></div>
@@ -346,10 +345,12 @@ function regionFacts(slug) {
   const out = [];
   if (gi.length) {
     const top = Math.max(...gi);
-    out.push(`${r.name}에서 열린 기수 가운데 가장 높은 기수는 ${top}기입니다. 한 지역에서 기수 번호가 이만큼 쌓였다는 것은 그동안 같은 과정이 반복해서 열렸다는 뜻입니다.`);
+    out.push(top >= 5
+      ? `${r.name}에서 열린 기수 가운데 가장 높은 기수는 ${top}기입니다. 한 지역에서 기수 번호가 이만큼 쌓였다는 것은 그동안 같은 과정이 반복해서 열렸다는 뜻입니다.`
+      : `${r.name}은 기수 번호가 아직 ${top}기입니다. 이제 자리를 잡아 가는 지역이라 한 기수 인원이 적고, 그만큼 서로 이야기할 시간이 깁니다.`);
   }
-  if (courses.length) out.push(`지금까지 ${r.name}에서 열린 과정은 ${courses.map((k) => COURSES[k].name).join(", ")}입니다.`);
-  out.push(`${r.name} 기수는 ${br.label}${iga(br.label)} 운영합니다. 수업 장소는 기수마다 달라 등록하신 분께 따로 안내해 드립니다.`);
+  if (courses.length) out.push(`${YEAR_LABEL} 일정에 올라온 ${r.name} 과정은 ${courses.map((k) => COURSES[k].name).join(", ")}입니다.`);
+  out.push(`${r.name} 기수는 ${br.label}${iga(br.label)} 운영합니다.`);
   if (sisters.length) out.push(`${br.label}${eun(br.label)} ${r.name} 외에 ${sisters.map((x) => REGIONS[x].name).join(", ")}도 함께 관할합니다. 이 지역에 기수가 열리지 않는 때에는 관할 안의 다른 지역 기수로 안내해 드립니다.`);
   else out.push(`${br.label}${eun(br.label)} ${r.name} 지역을 단독으로 맡고 있어, 일정이 이 지역 사정에 맞춰 잡힙니다.`);
   if (alum.length) out.push(`수료 후에는 ${alum[0].name} 동문회에 들어갑니다. ${alum[0].acts.slice(0, 3).join(", ")} 같은 모임이 운영되고 있습니다.`);
@@ -489,7 +490,8 @@ function layout({ file, title, desc, body, hero, ld = [], trail = null }) {
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>${esc(withSuffix(title))}</title>
 <meta name="description" content="${esc(desc)}">
-${url ? `<link rel="canonical" href="${url}">` : `<meta name="robots" content="noindex">`}
+${url ? `${file === "404.html" && SITE.BASE_URL ? `<base href="${SITE.BASE_URL}/">
+` : ""}<link rel="canonical" href="${url}">` : `<meta name="robots" content="noindex">`}
 <meta property="og:type" content="website">
 <meta property="og:title" content="${esc(withSuffix(title))}">
 <meta property="og:description" content="${esc(desc)}">
@@ -925,7 +927,8 @@ ${consultHtml({ course: c.name })}`;
       ...(SITE.BASE_URL ? { url: abs(courseFile(key)) } : {}),
       // 이미 가진 일정·수강료를 넣어 검색 결과에 기수가 그대로 노출되게 한다
       ...(active.length ? {
-        hasCourseInstance: active.map((r) => ({
+        // 개강일을 못 읽는 행(일정 미정)은 startDate 가 빈 값이 되어 구조화 데이터가 무효가 된다
+        hasCourseInstance: active.filter((r) => schedDate(r.open) != null).map((r) => ({
           "@type": "CourseInstance",
           name: `${r.name}${r.gi ? ` ${r.gi}기` : ""}`,
           courseMode: "onsite",
@@ -957,7 +960,7 @@ function buildSchedule() {
 
 <section class="sec">
   <div class="wrap">
-    ${secHead({ eyebrow: "Regions", title: ["지역별로", "보기"], sub: "지역을 누르면 그 지역의 개강 일정과 강의장, 동문 활동을 볼 수 있습니다." })}
+    ${secHead({ eyebrow: "Regions", title: ["지역별로", "보기"], sub: "지역을 누르면 그 지역의 개강 일정과 담당 지사, 동문 활동을 볼 수 있습니다." })}
     <div class="grid-4">
       ${Object.keys(REGIONS).map(regionCard).join("\n      ")}
     </div>
@@ -1006,7 +1009,7 @@ function buildRegions() {
 ${consultHtml()}`;
   return layout({
     file: "regions.html", title: "지역별 안내 | 서울·경기·부산·대구·대전·광주·울산 데일카네기 과정",
-    desc: "데일카네기 공개과정이 열리는 전국 24개 지역. 지역별 개강 일정과 강의장, 담당 지사, 수료 후 동문 활동을 안내합니다.",
+    desc: "데일카네기 공개과정이 열리는 전국 24개 지역. 지역별 개강 일정과 담당 지사, 수료 후 동문 활동을 안내합니다.",
     hero: heroSm({ trail, eyebrow: P.eyebrow, title: P.title, sub: P.sub, extra: `<dl class="hero-meta"><div><dt>지역</dt><dd>${Object.keys(REGIONS).length}개</dd></div><div><dt>모집 중</dt><dd><span data-live="regions">${LIVE.regions}</span>개 지역 · <span data-live="count">${LIVE.count}</span>개 기수</dd></div></dl>` }),
     body, trail, ld: [webPageLd("지역별 안내", "데일카네기 지역별 과정 안내", "regions.html")],
   });
@@ -1043,7 +1046,7 @@ function buildRegion(slug) {
   <div class="wrap">
     ${/* 개설 기록이 없으면 바로 아래 안내 문단이 같은 말을 하므로 sub를 비운다 */ ""}
     ${secHead({ eyebrow: "Schedule", title: R(REGION.scheduleTitle, r.name), sub: active.length ? C.SCHEDULE_COPY.sub : rows.length ? R(REGION.subPast, r.name) : "" })}
-    ${rows.length ? schedListHtml(rows) : `<p class="sch-empty reveal">${esc(R(REGION.waiting, r.name))} <a href="#consult">상담 신청하기</a></p>`}
+    ${rows.length ? schedListHtml(rows) : `<p class="sch-empty reveal">${esc(R(hasHistory ? REGION.waitingPast : REGION.waiting, r.name))} <a href="#consult">상담 신청하기</a></p>`}
     ${nearRows.length ? `<div class="near-sched reveal">
       <h3>${esc(br.label)} 관할에서 지금 모집 중인 기수</h3>
       <p>${esc(r.name)}에서 가까운 곳입니다. 등록하시면 그 지역 기수로 안내해 드립니다.</p>
@@ -1138,12 +1141,15 @@ ${consultHtml({ region: r.name })}`;
     hero: heroSm({ trail, eyebrow: `${REGION.eyebrow} · ${br.label}`, title: [`${r.name}에서 열리는`, "데일카네기 과정"], sub, actions: [["상담 신청", "#consult", true], ["개강 일정 보기", "#schedule"]] }),
     body, trail,
     ld: [
-      webPageLd(`${r.name} 데일카네기 과정`, `${r.name} 지역 개강 일정과 강의장 안내`, regionFile(slug)),
+      webPageLd(`${r.name} 데일카네기 과정`, `${r.name} 지역 개강 일정과 담당 지사 안내`, regionFile(slug)),
       {
         "@context": "https://schema.org", "@type": "EducationalOrganization",
-        name: `데일카네기 ${br.label}`, parentOrganization: { "@type": "Organization", name: "데일카네기코리아" },
-        areaServed: { "@type": "Place", name: r.name },
-        ...(SITE.BASE_URL ? { url: abs(regionFile(slug)) } : {}),
+        name: br.label.startsWith("데일카네기") ? br.label : `데일카네기 ${br.label}`, parentOrganization: { "@type": "Organization", name: "데일카네기코리아" },
+        // 같은 지사가 24개 지역 페이지에서 저마다 다른 url 을 가진 별개 조직으로 선언되면 안 된다.
+        // @id 를 지사마다 하나로 고정하고 담당 지역 전체를 areaServed 에 넣는다
+        ...(SITE.BASE_URL ? { "@id": `${abs("regions.html")}#branch-${r.branch}`, url: abs("regions.html") } : {}),
+        areaServed: Object.keys(REGIONS).filter((s) => REGIONS[s].branch === r.branch)
+          .map((s) => ({ "@type": "Place", name: REGIONS[s].name })),
       },
       ...(active.length ? [{
         "@context": "https://schema.org", "@type": "ItemList", name: `${r.name} 모집 중인 기수`,
@@ -1470,7 +1476,7 @@ function buildTopics() {
 
 <section class="sec">
   <div class="wrap">
-    ${secHead({ eyebrow: "By region", title: ["지역을 정해 놓고", "찾고 계시다면"], sub: "주제를 고른 뒤 지역을 누르면 그 지역의 개강 일정과 강의장, 담당 지사까지 함께 나옵니다." })}
+    ${secHead({ eyebrow: "By region", title: ["지역을 정해 놓고", "찾고 계시다면"], sub: "주제를 고른 뒤 지역을 누르면 그 지역의 개강 일정과 담당 지사까지 함께 나옵니다." })}
     ${COMBO_TOPICS.map((t) => `<div class="topic-regions reveal">
       <h3><a href="${topicFile(t)}">${esc(t.kw)}</a></h3>
       <div class="chips-lg">${Object.entries(REGIONS).map(([slug, r]) => `<a href="${comboFile(slug, t)}">${esc(r.name)} ${esc(t.kw)}</a>`).join("")}</div>
@@ -1480,9 +1486,9 @@ function buildTopics() {
 ${consultHtml()}`;
   return layout({
     file: "topics.html", title: "주제별 안내",
-    desc: `기업교육·CEO교육·리더십교육·비즈니스교육 등 ${TOPICS.length}가지 주제와 전국 ${Object.keys(REGIONS).length}개 지역별 안내. 찾으시는 말로 들어와 그 지역 개강 일정까지 한 번에 보실 수 있습니다.`,
+    desc: `기업교육·CEO교육·리더십교육·팀장교육·세일즈교육 등 상황별 안내와 지역별 개강 일정. 찾으시는 말로 들어와 그 지역 개강 일정까지 한 번에 보실 수 있습니다.`,
     hero: heroSm({ trail, eyebrow: "Topics", title: ["어떤 교육이", "필요하신가요"], sub: `교육 이름으로 찾는 분도 있고, 지역을 먼저 정하는 분도 있습니다. ${TOPICS.length}가지 주제로도, 지역으로도 찾으실 수 있습니다.` }),
-    body, trail, ld: [webPageLd("주제별 안내", "검색 주제별 데일카네기 교육 안내", "topics.html")],
+    body, trail, ld: [webPageLd("주제별 안내", "주제별 데일카네기 교육 안내", "topics.html")],
   });
 }
 
@@ -1533,7 +1539,7 @@ ${rows.length ? `
 ${t.combo ? `
 <section class="sec">
   <div class="wrap">
-    ${secHead({ eyebrow: "By region", title: `지역별 ${t.kw} 안내`, sub: "지역을 고르시면 그 지역의 개강 일정과 강의장, 담당 지사를 함께 보실 수 있습니다." })}
+    ${secHead({ eyebrow: "By region", title: `지역별 ${t.kw} 안내`, sub: "지역을 고르시면 그 지역의 개강 일정과 담당 지사를 함께 보실 수 있습니다." })}
     <div class="chips-lg reveal">${Object.entries(REGIONS).map(([slug, r]) => `<a href="${comboFile(slug, t)}">${esc(r.name)} ${esc(t.kw)}</a>`).join("")}</div>
   </div>
 </section>` : ""}
@@ -1600,7 +1606,7 @@ function buildCombo(slug, t) {
   const preset = t.courses[0] === "corporate" ? { course: "기업 맞춤 교육", region: r.name } : { course: COURSES[t.courses[0]].name, region: r.name };
   const sub = active.length
     ? `${R(t.regionLead, r.name)} 지금 ${active.length}개 기수를 모집하고 있고, 가장 빠른 개강은 ${nextLabel(next)}입니다.`
-    : `${R(t.regionLead, r.name)} 지금 이 지역에 열린 기수는 없지만 상담은 받고 있습니다.`;
+    : `${R(t.regionLead, r.name)} 지금 이 주제로 열린 기수는 없지만 상담은 받고 있습니다.`;
   const body = `<section class="sec">
   <div class="wrap narrow prose reveal">
     <p class="eyebrow">${esc(r.name)}</p>
@@ -1650,7 +1656,7 @@ function buildCombo(slug, t) {
 ${allRows.length ? `
 <section class="sec">
   <div class="wrap">
-    ${secHead({ eyebrow: "History", title: [`${r.name}에서`, "열렸던 기수"], sub: `주제와 상관없이 ${r.name}에서 진행된 기수 전체입니다. 지난 기수까지 들어 있어 이 지역에서 어떤 과정이 얼마나 자주 열리는지 가늠하실 수 있습니다.` })}
+    ${secHead({ eyebrow: "History", title: [`${r.name}에서`, "열렸던 기수"], sub: `${r.name}에서 진행된 기수입니다. 지난 기수도 함께 있습니다.` })}
     ${schedListHtml(allRows)}
   </div>
 </section>` : ""}
@@ -1659,6 +1665,7 @@ ${allRows.length ? `
   <div class="wrap narrow prose reveal">
     <h2 class="h-lg">${esc(t.body[0].h)}</h2>
     ${t.body[0].p.map((p) => `<p>${esc(p)}</p>`).join("\n    ")}
+    ${t.limit ? `<div class="callout"><strong>교육으로 풀리지 않는 부분</strong><p>${esc(t.limit)}</p></div>` : ""}
     <p class="sec-link"><a href="${topicFile(t)}">${esc(t.kw)} 전체 안내 보기 →</a></p>
   </div>
 </section>
