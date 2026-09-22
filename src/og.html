@@ -1,0 +1,36 @@
+<!doctype html>
+<!-- 공유 카드(og.png) 원본. 고치면 node make-og.js 로 다시 뽑는다.
+     첫 사이트 카드에는 "카네기코스"가 박혀 있어 이 사이트에서 쓰면 다른 사이트 이름이 뜬다. -->
+<html lang="ko">
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:1200px;height:630px;overflow:hidden}
+  .card{position:relative;width:1200px;height:630px;background:#0b0c10;font-family:"Pretendard Variable",Pretendard,system-ui,sans-serif}
+  .card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 38%}
+  /* 글자가 놓이는 왼쪽 아래를 가장 어둡게 해서 어떤 사진이 와도 대비가 확보되게 한다 */
+  .veil{position:absolute;inset:0;background:
+    linear-gradient(100deg,rgba(11,12,16,.92) 0%,rgba(11,12,16,.80) 34%,rgba(11,12,16,.28) 62%,rgba(11,12,16,.10) 100%),
+    linear-gradient(0deg,rgba(11,12,16,.72) 0%,rgba(11,12,16,0) 46%)}
+  .body{position:absolute;left:72px;bottom:64px;right:380px}
+  .bar{width:64px;height:5px;border-radius:3px;background:#ff5a2b;margin-bottom:26px}
+  .eyebrow{font-family:"Instrument Serif",serif;font-style:italic;font-size:30px;line-height:1;color:#ffb45c;margin-bottom:16px}
+  h1{font-size:74px;line-height:1.08;letter-spacing:-.035em;font-weight:800;color:#fff}
+  p{margin-top:20px;font-size:27px;line-height:1.4;font-weight:500;color:rgba(255,255,255,.86)}
+  .mark{position:absolute;right:66px;top:56px;height:46px;opacity:.95}
+</style>
+<div class="card">
+  <img src="../docs/assets/class-006.jpg" alt="">
+  <div class="veil"></div>
+  <img class="mark" src="../docs/assets/dc-logo-white.png" alt="" style="position:absolute;inset:auto 66px auto auto;width:auto;height:46px;object-fit:contain">
+  <div class="body">
+    <div class="bar"></div>
+    <div class="eyebrow">Dale Carnegie Korea</div>
+    <h1>데일카네기<br>리더십 트레이닝</h1>
+    <p>최고경영자 코스 · 기업교육 · 전국 개강 일정</p>
+  </div>
+</div>
