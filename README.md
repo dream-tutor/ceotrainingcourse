@@ -30,9 +30,9 @@ npx wrangler deploy          # wrangler.toml 의 [assets] directory=./docs 를 �
   기본값(`auto-trailing-slash`)이면 `/foo.html` 을 `/foo` 로 넘겨 canonical·sitemap과 어긋난다.
   `/` 는 `src/worker.js` 가 `index.html` 로 이어 준다.
 - `SITE.BASE_URL` 을 비우면 전 페이지가 `noindex` 로 나가고 canonical·sitemap·rss·robots가 빠진다.
+  도메인을 바꿀 때만 건드린다.
 - `rss.xml`(네이버 서치어드바이저 제출용)은 조합 페이지를 뺀 75장이다. 날짜는 공개일로 고정했다 —
   빌드 날짜를 넣으면 빌드할 때마다 모든 글이 새 글처럼 보인다. 새 페이지를 더하면 `RSS_DATES` 에 그 파일만 그날 날짜로 적는다.
-  도메인을 바꿀 때만 건드린다.
 
 ## 페이지 구성 (460개)
 
@@ -135,7 +135,7 @@ node build.js && node test-dates.js && node test-pages.js && node test-console.j
 | 스크립트 | 보는 것 |
 |---|---|
 | `test-dates.js` | 개강·수료일 연도 해석. 빌드 날짜를 24개로 바꿔 가며 미개강 기수가 '종료'로 찍히지 않는지 |
-| `test-pages.js` | 깨진 내부 링크·이미지, id 중복, 페이지당 h1 개수, 템플릿 자국(`undefined`·`{R}`), `#앵커` 유효성, title·description·h1이 페이지마다 다른지, title 60자 초과, 화면 글자에 전화번호 노출, 페이지당 tel 링크 2개 이상 |
+| `test-pages.js` | 깨진 내부 링크·이미지, id 중복, 페이지당 h1 개수, 템플릿 자국(`undefined`·`{R}`), `#앵커` 유효성, title·description·h1이 페이지마다 다른지, title 60자 초과, 화면 글자에 전화번호 노출, 페이지당 tel 링크 2개 이상, `rss.xml` 링크가 실제 페이지로 이어지는지·중복·날짜 |
 | `test-console.js` | 460개 페이지를 헤드리스 크롬으로 열어 콘솔 오류·예외 수집 (크롬이 설치돼 있어야 한다). 60개마다 크롬을 새로 띄운다 — 탭 하나로 다 돌면 `ERR_INSUFFICIENT_RESOURCES` 가 난다 |
 | `test-similar.js` | 지역×주제 조합 페이지끼리 얼마나 겹치는지 (위 '페이지 구성' 참고) |
 
