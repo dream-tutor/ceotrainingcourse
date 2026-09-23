@@ -257,6 +257,14 @@ ul,ol{margin:0;padding:0;list-style:none}
 .js .steps li.is-on::after{transform:scaleY(1)}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:26px 0 30px}
 .chips li{padding:6px 12px;border-radius:8px;background:var(--ivory);font-size:13.5px;font-weight:600;color:var(--text-2)}
+/* 탭 영역 — 흐르는 문구 알약 24개(52px / 18px), 칩 목록 11개(35px / 16px) — 홈 (2026-09-23)
+   껍데기 안에 inline <a> 하나만 있으면 눌리는 곳이 글자줄뿐이라 손가락으로 놓치기 쉽다.
+   ::after 를 껍데기 전체에 깔아 어디를 눌러도 링크가 열리게 한다. 보이는 건 그대로다.
+   ⚠ :has() 를 쓰지 말 것 — 지원 안 되는 브라우저에서 껍데기에 position 이 안 걸려
+     ::after 가 훨씬 큰 조상 기준으로 퍼지고, 엉뚱한 자리의 클릭을 먹는다. */
+.mq li,.chips li,.chips-lg li{position:relative}
+.mq li>a::after,.chips li>a::after,.chips-lg li>a::after{content:"";position:absolute;inset:0}
+.mq li>a:focus-visible,.chips li>a:focus-visible,.chips-lg li>a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 
 /* ============================================================
    숫자 띠

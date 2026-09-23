@@ -51,6 +51,9 @@ const SITE = {
   // ⚠ 키는 sangsang-workers/src/analytics.js 의 SITES·SITE_ORDER·SITE_GROUPS 세 곳에
   //    모두 등록해야 한다. 빠뜨리면 /collect 가 400으로 버려 수집이 조용히 0건이 된다
   TRACKER: { src: "https://xn--vb0by3y5wigqb.com/t.js", site: "ceotraining" },
+  // 서치콘솔·서치어드바이저 소유 확인 코드. 여러 개면 쉼표로 잇는다
+  VERIFY_GOOGLE: "bhqpXwWMSpIoW955iC-vJyqIDKS3xZaNV_rXebOswkk",
+  VERIFY_NAVER: "f225944c909aefda110b2ab042b9a143b4d593c2",
 };
 
 const OUT = path.join(__dirname, "docs"); // 첫 사이트와 같은 배포 구조 (GitHub Pages: main 브랜치 /docs)
@@ -496,7 +499,8 @@ function layout({ file, title, desc, body, hero, ld = [], trail = null }) {
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>${esc(withSuffix(title))}</title>
 <meta name="description" content="${esc(desc)}">
-${url ? `${file === "404.html" && SITE.BASE_URL ? `<base href="${SITE.BASE_URL}/">
+${[["google", SITE.VERIFY_GOOGLE], ["naver", SITE.VERIFY_NAVER]].flatMap(([k, v]) => String(v || "").split(",").map((c) => c.trim()).filter(Boolean).map((c) => `<meta name="${k}-site-verification" content="${esc(c)}">
+`)).join("")}${url ? `${file === "404.html" && SITE.BASE_URL ? `<base href="${SITE.BASE_URL}/">
 ` : ""}<link rel="canonical" href="${url}">` : `<meta name="robots" content="noindex">`}
 <meta property="og:type" content="website">
 <meta property="og:title" content="${esc(withSuffix(title))}">
