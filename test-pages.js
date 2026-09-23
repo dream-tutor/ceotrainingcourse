@@ -59,6 +59,23 @@ for (const [kind, key] of [["title", "dupTitle"], ["desc", "dupDesc"], ["h1", "d
     if (list.length > 1) bad[key].push([val.slice(0, 60), list.length, list.slice(0, 3)]);
   }
 }
+// rss.xml — 링크가 실제 페이지로 이어지는지, 같은 글이 두 번 들어가지 않았는지, 날짜가 있는지
+bad.rss = [];
+if (fs.existsSync(path.join(OUT, "rss.xml"))) {
+  const rss = fs.readFileSync(path.join(OUT, "rss.xml"), "utf8");
+  const items = rss.split("<item>").slice(1);
+  const seenLinks = new Set();
+  for (const it of items) {
+    const link = (it.match(/<link>([^<]+)<\/link>/) || [])[1] || "";
+    const file = link.replace(/^https?:\/\/[^/]+\/?/, "") || "index.html";
+    if (!have.has(file)) bad.rss.push(["없는 페이지", link]);
+    if (seenLinks.has(link)) bad.rss.push(["중복", link]);
+    seenLinks.add(link);
+    if (!/<pubDate>[^<]+<\/pubDate>/.test(it)) bad.rss.push(["날짜 없음", link]);
+    if (!/<title>[^<]+<\/title>/.test(it) || !/<description>[^<]+<\/description>/.test(it)) bad.rss.push(["제목·설명 없음", link]);
+  }
+  if (!items.length) bad.rss.push(["항목 0개", ""]);
+}
 const uniq = (arr) => [...new Set(arr.map(JSON.stringify))].map(JSON.parse);
 console.log("페이지:", files.length);
 for (const k of Object.keys(bad)) {

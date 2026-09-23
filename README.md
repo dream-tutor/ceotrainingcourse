@@ -29,7 +29,9 @@ npx wrangler deploy          # wrangler.toml 의 [assets] directory=./docs 를 �
 - **`html_handling = "none"` 을 바꾸지 말 것.** 이 사이트는 주소가 전부 `.html` 이다.
   기본값(`auto-trailing-slash`)이면 `/foo.html` 을 `/foo` 로 넘겨 canonical·sitemap과 어긋난다.
   `/` 는 `src/worker.js` 가 `index.html` 로 이어 준다.
-- `SITE.BASE_URL` 을 비우면 전 페이지가 `noindex` 로 나가고 canonical·sitemap·robots가 빠진다.
+- `SITE.BASE_URL` 을 비우면 전 페이지가 `noindex` 로 나가고 canonical·sitemap·rss·robots가 빠진다.
+- `rss.xml`(네이버 서치어드바이저 제출용)은 조합 페이지를 뺀 75장이다. 날짜는 공개일로 고정했다 —
+  빌드 날짜를 넣으면 빌드할 때마다 모든 글이 새 글처럼 보인다. 새 페이지를 더하면 `RSS_DATES` 에 그 파일만 그날 날짜로 적는다.
   도메인을 바꿀 때만 건드린다.
 
 ## 페이지 구성 (460개)

@@ -466,7 +466,11 @@ function footerHtml() {
 // ------------------------------------------------------------
 // 공통 틀
 // ------------------------------------------------------------
+// 페이지마다 제목·설명 — RSS 가 쓴다
+const PAGE_META = new Map();
+
 function layout({ file, title, desc, body, hero, ld = [], trail = null }) {
+  PAGE_META.set(file, { title, desc });
   const url = SITE.BASE_URL ? abs(file) : "";
   // 404는 /a/b/c 같은 하위 주소에서도 뜨기 때문에 상대 경로로는 CSS·JS·링크가 전부 깨진다.
   // 도메인이 정해져 있으면 루트 기준 경로를 쓴다
@@ -501,7 +505,8 @@ function layout({ file, title, desc, body, hero, ld = [], trail = null }) {
 <meta name="description" content="${esc(desc)}">
 ${[["google", SITE.VERIFY_GOOGLE], ["naver", SITE.VERIFY_NAVER]].flatMap(([k, v]) => String(v || "").split(",").map((c) => c.trim()).filter(Boolean).map((c) => `<meta name="${k}-site-verification" content="${esc(c)}">
 `)).join("")}${url ? `${file === "404.html" && SITE.BASE_URL ? `<base href="${SITE.BASE_URL}/">
-` : ""}<link rel="canonical" href="${url}">` : `<meta name="robots" content="noindex">`}
+` : ""}<link rel="canonical" href="${url}">
+<link rel="alternate" type="application/rss+xml" title="${esc(SITE.NAME)}" href="${SITE.BASE_URL}/rss.xml">` : `<meta name="robots" content="noindex">`}
 <meta property="og:type" content="website">
 <meta property="og:title" content="${esc(withSuffix(title))}">
 <meta property="og:description" content="${esc(desc)}">
@@ -1794,6 +1799,44 @@ if (SITE.BASE_URL) {
   // IndexNow 공용 키 확인 파일. 제출은 전문과외 워커의 중앙 크론이 매일 돌린다 —
   // 이 파일이 자기 도메인에서 열려야 그 사이트를 크론 목록에 넣을 수 있다
   fs.writeFileSync(path.join(OUT, `${INDEXNOW_KEY}.txt`), INDEXNOW_KEY);
+
+  // rss.xml — 네이버 서치어드바이저 RSS 제출용.
+  // 지역×주제 조합 384장은 넣지 않는다(사이트맵으로 충분하고, 피드에 같은 틀의 글을 쏟으면 찍어 낸 글로 보인다).
+  // pubDate 는 공개일로 고정한다. 빌드 날짜를 넣으면 빌드할 때마다 모든 글이 새 글처럼 보인다.
+  // 나중에 페이지를 새로 더하면 RSS_DATES 에 그 파일만 그날 날짜로 적는다.
+  const RSS_LAUNCH = "Tue, 22 Sep 2026 09:00:00 +0900";
+  const RSS_DATES = {};
+  const RSS_FILES = [
+    "index.html", "schedule.html",
+    ...COURSE_ORDER.map(courseFile),
+    ...Object.keys(REGIONS).map(regionFile),
+    ...TOPICS.map(topicFile),
+    ...CONCERNS.map(concernFile),
+    "courses.html", "regions.html", "topics.html", "concerns.html", "corporate.html", "reviews.html", "about.html", "faq.html",
+  ];
+  const items = RSS_FILES.map((f) => {
+    const m = PAGE_META.get(f);
+    if (!m) throw new Error(`RSS: ${f} 의 제목·설명이 없습니다 (PAGE_LIST 에서 빠졌는지 확인)`);
+    return `  <item>
+    <title>${esc(m.title)}</title>
+    <link>${abs(f)}</link>
+    <guid isPermaLink="true">${abs(f)}</guid>
+    <pubDate>${RSS_DATES[f] || RSS_LAUNCH}</pubDate>
+    <description>${esc(m.desc)}</description>
+  </item>`;
+  }).join("\n");
+  fs.writeFileSync(path.join(OUT, "rss.xml"), `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+  <title>${esc(SITE.NAME)}</title>
+  <link>${abs("index.html")}</link>
+  <atom:link href="${SITE.BASE_URL}/rss.xml" rel="self" type="application/rss+xml"/>
+  <description>${esc(SITE.DESC)}</description>
+  <language>ko</language>
+${items}
+</channel>
+</rss>
+`);
 }
 
 console.log(`빌드 완료 → ${OUT} (${PAGE_LIST.length}개 페이지)`);
