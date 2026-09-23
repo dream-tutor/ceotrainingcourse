@@ -784,3 +784,110 @@ ul,ol{margin:0;padding:0;list-style:none}
 .topic-regions h3{margin-bottom:14px;font-size:19px;letter-spacing:-.025em}
 .topic-regions h3 a{text-decoration:underline;text-underline-offset:4px}
 .topic-regions h3 a:hover{color:var(--accent-ink)}
+
+/* ============================================================
+   모바일에서 접는 목록 (details.fold)
+   링크 목록·반복 목록만 접는다. 넓은 화면에서는 build.js 의 FOLD_OPEN 이
+   파싱 도중에 열어 두므로 예전 모습 그대로다
+   ============================================================ */
+.fold > summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px}
+.fold > summary::-webkit-details-marker{display:none}
+.fold > summary::after{content:"";margin-left:auto;flex:none;width:8px;height:8px;border-right:1.8px solid currentColor;border-bottom:1.8px solid currentColor;opacity:.55;transform:translateY(-3px) rotate(45deg);transition:transform .25s var(--ease)}
+.fold[open] > summary::after{transform:translateY(1px) rotate(-135deg)}
+
+/* 주제별 안내 — 주제 16개 × 지역 24개 */
+.topic-regions > summary{font-size:19px;font-weight:700;letter-spacing:-.025em}
+.topic-regions > summary small{margin-left:auto;font-size:13px;font-weight:600;color:var(--text-3)}
+.topic-regions > summary::after{margin-left:0}
+.topic-regions .sec-link{margin-top:14px}
+
+/* 푸터 */
+.ft-col > summary,.ft-regions > summary{font-size:14px;font-weight:600;color:rgba(255,255,255,.5)}
+
+/* 후기 전문 */
+.review-more > summary{display:inline-flex;margin-top:14px;font-size:15px;font-weight:600;color:var(--accent-ink)}
+.review-more[open] > summary{display:none}
+
+@media (min-width:900px){
+  .fold > summary{cursor:default;pointer-events:none}
+  .fold > summary::after,.topic-regions > summary small{display:none}
+  .topic-regions > summary{margin-bottom:14px}
+  .review-more > summary{display:none}
+}
+@media (max-width:899px){
+  .topic-regions{border-top:1px solid var(--line)}
+  .topic-regions:last-of-type{border-bottom:1px solid var(--line)}
+  .topic-regions+.topic-regions{margin-top:0}
+  .topic-regions > summary{padding:17px 2px;font-size:17px}
+  .topic-regions[open] > summary{padding-bottom:12px}
+  .topic-regions .sec-link{margin:14px 0 20px}
+
+  .ft-cols{grid-template-columns:minmax(0,1fr);gap:0}
+  .ft-col,.ft-regions{border-top:1px solid var(--line-d)}
+  .ft-regions{margin-top:0;padding-top:0}
+  .ft-col > summary,.ft-regions > summary{padding:15px 0;font-size:15px;color:rgba(255,255,255,.82)}
+  .ft-col div,.ft-regions div{margin:0 0 18px}
+  .ft-top{gap:28px}
+}
+
+/* ============================================================
+   옆으로 넘기는 목록의 위치 표시 (app.js 가 실제로 넘칠 때만 붙인다)
+   ============================================================ */
+.hs-meta{display:flex;align-items:center;gap:12px;margin-top:16px;font-size:13.5px;color:var(--text-3)}
+.hs-hint{white-space:nowrap;transition:opacity .3s}
+.hs-meta.is-moved .hs-hint{opacity:.55}
+.hs-count{white-space:nowrap;font-weight:600;font-variant-numeric:tabular-nums}
+.hs-count b{font-weight:700;color:var(--text)}
+.hs-bar{flex:1;min-width:40px;height:2px;border-radius:2px;background:var(--line);overflow:hidden}
+.hs-bar i{display:block;height:100%;background:var(--ink);transform-origin:left center;transform:scaleX(.1);transition:transform .2s var(--ease)}
+.voices .hs-meta{color:rgba(255,255,255,.62)}
+.voices .hs-count b{color:#fff}
+.voices .hs-bar{background:rgba(255,255,255,.2)}
+.voices .hs-bar i{background:#fff}
+.vc-nav{align-items:center}
+.vc-nav .hs-meta{flex:1;margin:0 8px 0 0}
+
+/* ============================================================
+   모바일 길이 — 내용은 그대로 두고 여백과 크기만 줄인다
+   ============================================================ */
+@media (max-width:760px){
+  .sch-row{padding:15px 16px;gap:2px 12px}
+  .sch-date strong{font-size:20px}
+  .sch-main h3{font-size:16.5px}
+  .sch-main p{font-size:13.5px;line-height:1.5}
+  .sch-end{margin-top:9px;padding-top:9px}
+  .sch-cta{height:34px}
+}
+@media (max-width:640px){
+  .sol-fig{aspect-ratio:16/10}
+  .steps{margin-top:20px}
+  .steps li{gap:12px;padding-bottom:13px}
+  .steps h4{font-size:15.5px}
+  .steps p{font-size:14px;line-height:1.55}
+  .review p:not(.review-by){font-size:15.5px;line-height:1.75}
+}
+
+/* 긴 링크 목록 — 좁은 화면에서는 앞 8개만 (app.js 가 "N개 더 보기" 버튼을 붙인다) */
+.chips-more-btn{display:inline-flex;align-items:center;gap:8px;margin-top:14px;height:42px;padding:0 18px;border-radius:999px;border:1px dashed var(--line);background:transparent;font-size:14.5px;font-weight:600;color:var(--text-2)}
+.chips-more-btn:hover{border-style:solid;border-color:var(--ink);color:var(--ink)}
+@media (max-width:899px){
+  .js .chips-more:not(.is-open) > :nth-child(n+9){display:none} /* 스크립트가 없으면 버튼도 없으니 숨기지 않는다 */
+}
+@media (min-width:900px){
+  .chips-more-btn{display:none}
+}
+
+/* 홈 교육 대상 블록의 진행 방식 */
+.sol-steps > summary{margin-top:22px;padding:13px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);font-size:15px;font-weight:700;color:var(--text)}
+.sol-steps[open] > summary{border-bottom-color:transparent}
+.sol-steps .steps{margin-top:8px;margin-bottom:6px}
+@media (min-width:900px){
+  .sol-steps > summary{display:none}
+  .sol-steps .steps{margin-top:30px;margin-bottom:0}
+}
+
+/* 따라다니는 버튼(높이 54 + 아래 여백 24)이 푸터 마지막 줄(정보 업데이트 날짜)을 덮지 않게 */
+.ft{padding-bottom:calc(96px + env(safe-area-inset-bottom))}
+@media (max-width:640px){
+  .ft{padding-bottom:calc(84px + env(safe-area-inset-bottom))}
+}

@@ -350,6 +350,57 @@
     if (consultDlg && a.getAttribute("href") === "#consult") { e.preventDefault(); consultDlg.open(); }
   });
 
+  // ---------- 긴 링크 목록 — 좁은 화면에서는 앞부분만 ----------
+  // CSS 가 9번째부터 숨기고, 여기서 남은 개수를 적은 버튼을 붙인다. 넓은 화면에서는 버튼도 숨는다
+  $$(".chips-more").forEach((box) => {
+    const rest = box.children.length - 8;
+    if (rest <= 0) return;
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "chips-more-btn";
+    b.textContent = rest + "개 더 보기";
+    b.addEventListener("click", () => { box.classList.add("is-open"); b.remove(); const n = box.children[8]; if (n) n.focus(); });
+    box.insertAdjacentElement("afterend", b);
+  });
+
+  // ---------- 옆으로 넘기는 목록의 위치 표시 ----------
+  // 다음 카드가 조금 비치는 것만으로는 넘길 수 있다는 걸 모르고 지나치기 쉽다.
+  // 실제로 넘칠 때만 "몇 번째 / 전체"와 진행 막대를 붙인다(넓은 화면에서 격자로 펼쳐지면 숨는다)
+  $$("[data-hs]").forEach((track) => {
+    const items = [...track.children];
+    if (items.length < 2) return;
+    const meta = document.createElement("div");
+    meta.className = "hs-meta";
+    meta.setAttribute("aria-hidden", "true"); // 화면 읽기 프로그램에는 목록 자체가 이미 전부 읽힌다
+    meta.innerHTML = '<span class="hs-hint">옆으로 밀어서 더 보기</span><span class="hs-count"><b>1</b> / ' + items.length + '</span><span class="hs-bar"><i></i></span>';
+    const host = track.dataset.hsHost ? track.parentElement.querySelector(track.dataset.hsHost) : null;
+    if (host) host.insertBefore(meta, host.firstChild); else track.insertAdjacentElement("afterend", meta);
+    const num = $("b", meta), fill = $(".hs-bar i", meta);
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const over = track.scrollWidth > track.clientWidth + 4;
+      meta.hidden = !over;
+      if (!over) return;
+      const max = track.scrollWidth - track.clientWidth;
+      const p = max > 0 ? track.scrollLeft / max : 0;
+      const view = track.clientWidth / track.scrollWidth;
+      fill.style.transform = "scaleX(" + (view + p * (1 - view)).toFixed(3) + ")";
+      // scroll-padding 이 max() 같은 식이면 계산값이 문자열로 남아 숫자로 안 읽힌다 — 그때는 안쪽 여백을 쓴다
+      const cs = getComputedStyle(track), sp = parseFloat(cs.scrollPaddingLeft);
+      const edge = track.getBoundingClientRect().left + (isNaN(sp) ? parseFloat(cs.paddingLeft) || 0 : sp);
+      let cur = 0, best = Infinity;
+      items.forEach((it, i) => { const d = Math.abs(it.getBoundingClientRect().left - edge); if (d < best) { best = d; cur = i; } });
+      if (p > 0.97) cur = items.length - 1;
+      num.textContent = cur + 1;
+      if (track.scrollLeft > 8) meta.classList.add("is-moved");
+    };
+    const queue = () => { if (!raf) raf = requestAnimationFrame(update); };
+    track.addEventListener("scroll", queue, { passive: true });
+    window.addEventListener("resize", queue);
+    update();
+  });
+
   // ---------- 흐르는 띠 멈춤 ----------
   (() => {
     const wrap = $(".mq-wrap");

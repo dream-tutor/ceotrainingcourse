@@ -43,7 +43,9 @@ const SITE = {
   DESC: `데일카네기 최고경영자 코스, 데일카네기 코스(DCC), 리더십·프레젠테이션 과정과 기업 맞춤 교육 안내. ${YEAR_LABEL} 전국 개강 일정과 상담 신청.`,
   SUFFIX: " | 데일카네기 리더십 트레이닝",
   // 첫 사이트와 같은 규칙: 우클릭·F12·드래그·텍스트 선택 막기
-  PROTECT: true,
+  // 텍스트 선택·우클릭 막기는 전 사이트 규칙상 새 사이트에 넣지 않는다(2026-09-15 과외 계열에서 해제 —
+  // 방문자가 번호·주소를 복사하지 못하는 부작용). 첫 사이트에는 아직 켜져 있다
+  PROTECT: false,
   // 방문 분석 스크립트 (첫 사이트는 data-site="carnegie").
   // PC에서 전화 버튼을 누르면 번호 창을 띄우는 것도 이 스크립트가 전 사이트 공통으로 한다.
   // ⚠ 키는 sangsang-workers/src/analytics.js 의 SITES·SITE_ORDER·SITE_GROUPS 세 곳에
@@ -424,6 +426,9 @@ function consultHtml(preset = {}) {
 </dialog>`;
 }
 
+// 모바일에서만 접는 목록(details.fold). 넓은 화면에서는 파싱 도중 바로 열어 예전 모습 그대로 둔다
+const FOLD_OPEN = `<script>if(matchMedia("(min-width:900px)").matches)document.querySelectorAll("details.fold:not([open])").forEach(function(d){d.open=true})</script>`;
+
 function footerHtml() {
   const regions = Object.entries(REGIONS).map(([slug, r]) => `<a href="${regionFile(slug)}">${esc(r.name)}</a>`).join("");
   const courses = COURSE_ORDER.map((k) => `<a href="${courseFile(k)}">${esc(COURSES[k].name)}</a>`).join("");
@@ -437,14 +442,15 @@ function footerHtml() {
         <a class="btn btn-white" href="#consult">상담 신청${IC.arrow}</a>
       </div>
       <div class="ft-cols">
-        <div class="ft-col"><h3>과정</h3><div>${courses}</div></div>
-        <div class="ft-col"><h3>안내</h3><div>${pages}<a href="corporate.html#faq">기업교육 진행 방식</a></div></div>
+        <details class="ft-col fold"><summary>과정</summary><div>${courses}</div></details>
+        <details class="ft-col fold"><summary>안내</summary><div>${pages}<a href="corporate.html#faq">기업교육 진행 방식</a></div></details>
       </div>
     </div>
-    <div class="ft-regions">
-      <h3>지역별 개강 일정</h3>
+    <details class="ft-regions fold">
+      <summary>지역별 개강 일정</summary>
       <div>${regions}</div>
-    </div>
+    </details>
+    ${FOLD_OPEN}
     <p class="ft-fine">과정 일정과 수강료는 사정에 따라 바뀔 수 있습니다. 정확한 내용은 상담 신청으로 확인해 주세요.<span>정보 업데이트 ${TODAY.replace(/-/g, ".")}</span></p>
   </div>
 </footer>
@@ -632,9 +638,11 @@ function solutionsHtml() {
         <div class="sol-no"><strong>${s.no}</strong><span class="tag">${s.badge}</span></div>
         <h3 class="h-lg">${lines(s.title)}</h3>
         <p class="sol-desc">${esc(s.desc)}</p>
+        <details class="sol-steps fold"><summary>진행 방식</summary>
         <ol class="steps" data-steps>
           ${s.steps.map(([t, d], k) => `<li><span class="step-n">${k + 1}</span><div><h4>${esc(t)}</h4><p>${esc(d)}</p></div></li>`).join("\n          ")}
         </ol>
+        </details>${FOLD_OPEN}
         <ul class="chips">${s.chips.map(chipHtml).join("")}</ul>
         ${cta}
       </div>
@@ -704,7 +712,7 @@ function voicesHtml() {
     </div>
   </div>
   <div class="vc-wrap reveal">
-    <ul class="vc-track" id="vcTrack" tabindex="0" aria-label="추천의 글">
+    <ul class="vc-track" id="vcTrack" tabindex="0" aria-label="추천의 글" data-hs data-hs-host=".vc-nav">
         ${endorse}
     </ul>
     <div class="wrap vc-nav">
@@ -714,7 +722,7 @@ function voicesHtml() {
   </div>
   <div class="wrap">
     <h3 class="rv-title reveal">수료생이 남긴 후기</h3>
-    <ul class="rv-grid reveal">
+    <ul class="rv-grid reveal" data-hs>
         ${reviews}
     </ul>
     <p class="voices-more reveal"><a class="btn btn-line" href="reviews.html">후기 전체 보기${IC.arrow}</a></p>
@@ -1347,15 +1355,17 @@ function buildReviews() {
 
 <section class="sec">
   <div class="wrap narrow">
-    ${secHead({ eyebrow: "Reviews", title: ["수강생이", "남긴 후기"], sub: "수료생이 쓴 글과 지사에서 정리한 수강 사례에서 옮겼습니다. 이름 일부는 가렸습니다." })}
+    ${secHead({ eyebrow: "Reviews", title: ["수강생이", "남긴 후기"], sub: "과정을 마친 분들이 직접 남긴 말입니다. 이름 일부는 가려져 있습니다." })}
     <div class="reviews">
       ${REVIEWS.map((rv, i) => `<article class="review reveal" id="rv-${i + 1}">
         <span class="review-no">${String(i + 1).padStart(2, "0")}</span>
         <h3>${esc(rv.title)}</h3>
         <p class="review-by">${esc(rv.author)}</p>
-        ${rv.paras.map((p) => `<p>${esc(p)}</p>`).join("\n        ")}
+        <p>${esc(rv.paras[0])}</p>
+        ${rv.paras.length > 1 ? `<details class="review-more fold"><summary>이어서 읽기</summary>${rv.paras.slice(1).map((p) => `<p>${esc(p)}</p>`).join("\n        ")}</details>` : ""}
       </article>`).join("\n      ")}
     </div>
+    ${FOLD_OPEN}
   </div>
 </section>
 ${consultHtml()}`;
@@ -1467,7 +1477,7 @@ function buildTopics() {
   const trail = [HOME, ["주제별 안내", null]];
   const body = `<section class="sec sec-alt sec-tight">
   <div class="wrap">
-    <h2 class="sr">검색 주제 ${TOPICS.length}가지</h2>
+    <h2 class="sr">주제별 안내</h2>
     <div class="grid-3">
       ${TOPICS.map((t) => topicCard(t)).join("\n      ")}
     </div>
@@ -1477,16 +1487,18 @@ function buildTopics() {
 <section class="sec">
   <div class="wrap">
     ${secHead({ eyebrow: "By region", title: ["지역을 정해 놓고", "찾고 계시다면"], sub: "주제를 고른 뒤 지역을 누르면 그 지역의 개강 일정과 담당 지사까지 함께 나옵니다." })}
-    ${COMBO_TOPICS.map((t) => `<div class="topic-regions reveal">
-      <h3><a href="${topicFile(t)}">${esc(t.kw)}</a></h3>
+    ${COMBO_TOPICS.map((t) => `<details class="topic-regions fold">
+      <summary><span>${esc(t.kw)}</span><small>${Object.keys(REGIONS).length}개 지역</small></summary>
       <div class="chips-lg">${Object.entries(REGIONS).map(([slug, r]) => `<a href="${comboFile(slug, t)}">${esc(r.name)} ${esc(t.kw)}</a>`).join("")}</div>
-    </div>`).join("\n    ")}
+      <p class="sec-link"><a href="${topicFile(t)}">${esc(t.kw)} 전체 안내 →</a></p>
+    </details>`).join("\n    ")}
+    ${FOLD_OPEN}
   </div>
 </section>
 ${consultHtml()}`;
   return layout({
     file: "topics.html", title: "주제별 안내",
-    desc: `기업교육·CEO교육·리더십교육·팀장교육·세일즈교육 등 상황별 안내와 지역별 개강 일정. 찾으시는 말로 들어와 그 지역 개강 일정까지 한 번에 보실 수 있습니다.`,
+    desc: `기업교육·CEO교육·리더십교육·팀장교육·세일즈교육 등 상황별 안내와 지역별 개강 일정.`,
     hero: heroSm({ trail, eyebrow: "Topics", title: ["어떤 교육이", "필요하신가요"], sub: `교육 이름으로 찾는 분도 있고, 지역을 먼저 정하는 분도 있습니다. ${TOPICS.length}가지 주제로도, 지역으로도 찾으실 수 있습니다.` }),
     body, trail, ld: [webPageLd("주제별 안내", "주제별 데일카네기 교육 안내", "topics.html")],
   });
@@ -1540,7 +1552,7 @@ ${t.combo ? `
 <section class="sec">
   <div class="wrap">
     ${secHead({ eyebrow: "By region", title: `지역별 ${t.kw} 안내`, sub: "지역을 고르시면 그 지역의 개강 일정과 담당 지사를 함께 보실 수 있습니다." })}
-    <div class="chips-lg reveal">${Object.entries(REGIONS).map(([slug, r]) => `<a href="${comboFile(slug, t)}">${esc(r.name)} ${esc(t.kw)}</a>`).join("")}</div>
+    <div class="chips-lg chips-more reveal">${Object.entries(REGIONS).map(([slug, r]) => `<a href="${comboFile(slug, t)}">${esc(r.name)} ${esc(t.kw)}</a>`).join("")}</div>
   </div>
 </section>` : ""}
 ${related.length ? `
@@ -1573,7 +1585,7 @@ ${related.length ? `
 <section class="sec sec-alt">
   <div class="wrap">
     ${secHead({ eyebrow: "More", title: "다른 주제도 보시려면" })}
-    <div class="chips-lg reveal">${TOPICS.filter((x) => x.slug !== t.slug).map((x) => `<a href="${topicFile(x)}">${esc(x.kw)}</a>`).join("")}</div>
+    <div class="chips-lg chips-more reveal">${TOPICS.filter((x) => x.slug !== t.slug).map((x) => `<a href="${topicFile(x)}">${esc(x.kw)}</a>`).join("")}</div>
   </div>
 </section>
 ${consultHtml(preset)}`;
@@ -1689,7 +1701,7 @@ ${mine.length ? `
 <section class="sec${mine.length ? "" : " sec-alt"}">
   <div class="wrap">
     ${secHead({ eyebrow: "More", title: `${r.name}의 다른 주제` })}
-    <div class="chips-lg reveal">${COMBO_TOPICS.filter((x) => x.slug !== t.slug).map((x) => `<a href="${comboFile(slug, x)}">${esc(r.name)} ${esc(x.kw)}</a>`).join("")}</div>
+    <div class="chips-lg chips-more reveal">${COMBO_TOPICS.filter((x) => x.slug !== t.slug).map((x) => `<a href="${comboFile(slug, x)}">${esc(r.name)} ${esc(x.kw)}</a>`).join("")}</div>
     <h3 class="sec-title-sm" style="margin-top:34px;font-size:16px;font-weight:700">다른 지역의 ${esc(t.kw)}</h3>
     <div class="chips-lg reveal" style="margin-top:14px">${near.concat(Object.keys(REGIONS).filter((x) => x !== slug && !near.includes(x)).slice(0, 8)).map((x) => `<a href="${comboFile(x, t)}">${esc(REGIONS[x].name)}</a>`).join("")}</div>
   </div>

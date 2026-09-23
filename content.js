@@ -145,7 +145,7 @@ const SCHEDULE_COPY = {
 const VOICES = {
   eyebrow: "Voices",
   title: ["먼저 경험한", "사람들의 말"],
-  sub: "추천의 글은 공개된 발언을 그대로 옮겼고, 후기는 수료생이 쓴 글과 지사에서 정리한 수강 사례에서 발췌했습니다.",
+  sub: "과정을 마친 분들과, 데일카네기를 거쳐 간 사람들이 남긴 말입니다.",
 };
 
 const STORY = {
