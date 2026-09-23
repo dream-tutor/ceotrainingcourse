@@ -53,7 +53,7 @@ const SITE = {
   TRACKER: { src: "https://xn--vb0by3y5wigqb.com/t.js", site: "ceotraining" },
   // 서치콘솔·서치어드바이저 소유 확인 코드. 여러 개면 쉼표로 잇는다
   VERIFY_GOOGLE: "bhqpXwWMSpIoW955iC-vJyqIDKS3xZaNV_rXebOswkk",
-  VERIFY_NAVER: "f225944c909aefda110b2ab042b9a143b4d593c2",
+  VERIFY_NAVER: "126647b38491a989a24ebfb64bc5e0ca081c4836,f225944c909aefda110b2ab042b9a143b4d593c2", // 앞: ceotrainingcourse.com · 뒤: www 로 먼저 등록했던 것
 };
 
 const OUT = path.join(__dirname, "docs"); // 첫 사이트와 같은 배포 구조 (GitHub Pages: main 브랜치 /docs)
