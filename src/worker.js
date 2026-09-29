@@ -1,5 +1,6 @@
 // docs/ 를 그대로 내보내는 앞단 워커.
-//  · 대표 도메인이 아닌 호스트(www·workers.dev)는 대표 도메인으로 301
+//  · http 로 들어온 요청과 대표 도메인이 아닌 호스트(www·workers.dev)는 https 대표 도메인으로 301
+//    (http 를 그대로 두면 상담 양식이 암호화되지 않은 페이지에서 열린다 — 2026-09-29 점검)
 //  · 디렉터리 요청(/ 나 /로 끝나는 경로)은 index.html 로 이어 준다
 //
 // html_handling 을 "none" 으로 둔 이유: 이 사이트의 canonical·sitemap·내부 링크가
@@ -12,7 +13,7 @@ export default {
     const url = new URL(request.url);
     const local = url.hostname === "localhost" || url.hostname === "127.0.0.1";
 
-    if (!local && url.hostname !== DOMAIN) {
+    if (!local && (url.protocol === "http:" || url.hostname !== DOMAIN)) {
       return Response.redirect(`https://${DOMAIN}${url.pathname}${url.search}`, 301);
     }
 

@@ -42,10 +42,8 @@ const SITE = {
   TITLE: `데일카네기 리더십 교육 | 최고경영자 코스·DCC·기업교육 ${YEAR_LABEL} 일정`,
   DESC: `데일카네기 최고경영자 코스, 데일카네기 코스(DCC), 리더십·프레젠테이션 과정과 기업 맞춤 교육 안내. ${YEAR_LABEL} 전국 개강 일정과 상담 신청.`,
   SUFFIX: " | 데일카네기 리더십 트레이닝",
-  // 첫 사이트와 같은 규칙: 우클릭·F12·드래그·텍스트 선택 막기
-  // 텍스트 선택·우클릭 막기는 전 사이트 규칙상 새 사이트에 넣지 않는다(2026-09-15 과외 계열에서 해제 —
-  // 방문자가 번호·주소를 복사하지 못하는 부작용). 첫 사이트에는 아직 켜져 있다
-  PROTECT: false,
+  // 우클릭·F12·드래그·텍스트 선택 막기는 넣지 않는다(2026-09-15 과외 계열에서 해제 — 방문자가 번호·주소를
+  // 복사하지 못하는 부작용. 첫 사이트도 2026-09-29 해제). 꺼 둔 채 남아 있던 코드도 09-29에 지웠다
   // 방문 분석 스크립트 (첫 사이트는 data-site="carnegie").
   // PC에서 전화 버튼을 누르면 번호 창을 띄우는 것도 이 스크립트가 전 사이트 공통으로 한다.
   // ⚠ 키는 sangsang-workers/src/analytics.js 의 SITES·SITE_ORDER·SITE_GROUPS 세 곳에
@@ -97,6 +95,19 @@ const closeDate = (r) => D.closeDate(r, TODAY_KST);
 const schedStatus = (r) => D.schedStatus(r, TODAY_KST);
 const isoDay = D.isoDay;
 const TODAY = isoDay(TODAY_KST);
+// 페이지 날짜 — 파일 이름을 시드로 한 달에 한 번만 바뀐다(전 사이트 정책: URL 시드·월 단위 고정, 주 단위 랜덤 회전 금지).
+//   빌드 날짜를 그대로 쓰면 다시 빌드할 때마다 모든 페이지가 한꺼번에 '수정됨'이 된다(2026-09-29 점검).
+//   이번 달 안의 고정 날짜(1~28일), 아직 오지 않았으면 지난달 같은 날. 공개일(2026-09-22)보다 앞서지 않는다.
+//   JSON-LD dateModified · 사이트맵 lastmod · 푸터 '정보 업데이트' 가 모두 이 값을 쓴다
+const LAUNCH_DAY = Date.UTC(2026, 8, 22);
+const seedHash = (s) => { let h = 0; for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0; return Math.abs(h); };
+function pageDate(file) {
+  const off = seedHash("m:" + file) % 28;
+  const d = new Date(TODAY_KST);
+  let t = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1 + off);
+  if (t > TODAY_KST) t = Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - 1, 1 + off);
+  return isoDay(Math.max(t, LAUNCH_DAY));
+}
 const ST_LABEL = { open: "접수 중", soon: "마감 임박", past: "개강 완료", done: "종료", tba: "일정 문의" };
 const isActive = (r) => D.isActive(r, TODAY_KST);
 const openKey = (r) => { const t = schedDate(r.open); return t == null ? "9999" : isoDay(t); };
@@ -214,7 +225,7 @@ function crumbsLd(trail) {
 }
 
 // 하위 페이지 공통 히어로 (홈보다 낮은 어두운 띠)
-function heroSm({ trail, badge, eyebrow, title, sub, extra = "", actions = null }) {
+function heroSm({ trail, badge, eyebrow, title, sub, subHtml = "", extra = "", actions = null }) {
   const acts = actions ? `<div class="hero-actions">${actions.map(([t, h, primary]) => `<a class="btn ${primary ? "btn-white" : "btn-line"}" href="${h}">${esc(t)}${primary ? IC.arrow : ""}</a>`).join("")}</div>` : "";
   return `<section class="hero hero-sm" id="top">
   <div class="hero-bg" aria-hidden="true"><i class="glow g1"></i><i class="glow g2"></i><i class="grain"></i></div>
@@ -223,7 +234,7 @@ function heroSm({ trail, badge, eyebrow, title, sub, extra = "", actions = null 
     ${badge ? `<span class="hero-badge">${esc(badge)}</span>` : ""}
     ${eyebrow ? `<p class="hero-eyebrow">${esc(eyebrow)}</p>` : ""}
     <h1 class="hero-title">${Array.isArray(title) ? `<span class="ln">${esc(title[0])}</span> <span class="ln hl">${esc(title[1])}</span>` : esc(title)}</h1>
-    ${sub ? `<p class="hero-sub">${esc(sub)}</p>` : ""}
+    ${subHtml ? `<p class="hero-sub">${subHtml}</p>` : sub ? `<p class="hero-sub">${esc(sub)}</p>` : ""}
     ${extra}
     ${acts}
   </div>
@@ -282,6 +293,17 @@ function liveFoot({ course = null, region = null, none }) {
     : esc(none);
   const attrs = [course ? ` data-live-course="${course}"` : "", region ? ` data-live-region="${region}"` : "", ` data-live-none="${esc(none)}"`].join("");
   return `<span class="card-foot"${attrs}><span class="live-txt">${txt}</span><b>${IC.arrow}</b></span>`;
+}
+
+// 지역·조합 페이지 히어로의 '지금 N개 기수 모집 중' 문장 — 빌드 때 값으로 찍고 app.js가 접속 시점 기준으로
+// 그 지역(주제가 있으면 그 과정들)만 다시 센다. 그사이 모두 개강해 남은 기수가 없으면 none 문장으로 바꾼다.
+// 제목·설명문은 브라우저에서 바꿀 수 없으니 개강일이 지나면 다시 빌드해야 한다 (README '개강일이 지나면')
+function liveSub({ tmpl, none, region, courses = null, rows }) {
+  const next = nextOf(rows);
+  const html = esc(tmpl)
+    .replace("{N}", `<span data-n>${rows.length}</span>`)
+    .replace("{NEXT}", `<span data-next>${esc(nextLabel(next) || "문의 시 안내")}</span>`);
+  return `<span data-live-sub data-region="${region}"${courses ? ` data-courses="${courses.join(" ")}"` : ""} data-none="${esc(none)}">${html}</span>`;
 }
 
 // 카드
@@ -401,7 +423,7 @@ function consultHtml(preset = {}) {
         <label class="fd"><span>직급</span><input type="text" name="직급" placeholder="예: 대표 / 팀장" autocomplete="organization-title"></label>
         <label class="fd"><span>문의 과정 <b>*</b></span><select name="관심과정" required><option value="">선택해 주세요</option>${courseOpts}</select></label>
         <label class="fd"><span>문의 지역 <b>*</b></span><select name="지역" required><option value="">선택해 주세요</option>${regionOpts}</select></label>
-        <label class="fd fd-wide"><span>문의 내용</span><textarea name="문의내용" rows="4" placeholder="문의하시게 된 계기, 지금 겪고 있는 상황, 궁금한 점을 편하게 적어 주세요"></textarea></label>
+        <label class="fd fd-wide"><span>문의 내용</span><textarea name="문의내용" rows="4" maxlength="1000" placeholder="문의하시게 된 계기, 지금 겪고 있는 상황, 궁금한 점을 편하게 적어 주세요"></textarea></label>
       </div>
       <div class="agree">
         <input type="checkbox" id="agree" name="동의" required checked>
@@ -432,7 +454,7 @@ function consultHtml(preset = {}) {
 // 모바일에서만 접는 목록(details.fold). 넓은 화면에서는 파싱 도중 바로 열어 예전 모습 그대로 둔다
 const FOLD_OPEN = `<script>if(matchMedia("(min-width:900px)").matches)document.querySelectorAll("details.fold:not([open])").forEach(function(d){d.open=true})</script>`;
 
-function footerHtml() {
+function footerHtml(file) {
   const regions = Object.entries(REGIONS).map(([slug, r]) => `<a href="${regionFile(slug)}">${esc(r.name)}</a>`).join("");
   const courses = COURSE_ORDER.map((k) => `<a href="${courseFile(k)}">${esc(COURSES[k].name)}</a>`).join("");
   const pages = [...NAV, ...NAV_MORE].map(([t, h]) => `<a href="${h}">${t}</a>`).join("");
@@ -454,7 +476,7 @@ function footerHtml() {
       <div>${regions}</div>
     </details>
     ${FOLD_OPEN}
-    <p class="ft-fine">과정 일정과 수강료는 사정에 따라 바뀔 수 있습니다. 정확한 내용은 상담 신청으로 확인해 주세요.<span>정보 업데이트 ${TODAY.replace(/-/g, ".")}</span></p>
+    <p class="ft-fine">과정 일정과 수강료는 사정에 따라 바뀔 수 있습니다. 정확한 내용은 상담 신청으로 확인해 주세요.<span>정보 업데이트 ${pageDate(file).replace(/-/g, ".")}</span></p>
   </div>
 </footer>
 <div class="float" id="float">
@@ -478,23 +500,6 @@ function layout({ file, title, desc, body, hero, ld = [], trail = null }) {
   const ldAll = [...ld];
   const bl = trail && crumbsLd(trail);
   if (bl) ldAll.push(bl);
-  const protect = SITE.PROTECT ? `<script>
-(function(){
-  function isFormEl(t){ return t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT'); }
-  // 키보드로 연 컨텍스트 메뉴(Shift+F10 / 메뉴 키)는 막지 않는다 — 마우스를 못 쓰는 사용자의 유일한 복사 경로다
-  document.addEventListener('contextmenu', function(e){ if(!isFormEl(e.target) && e.button !== -1 && !(e.clientX === 0 && e.clientY === 0)) e.preventDefault(); }, true);
-  document.addEventListener('keydown', function(e){
-    if(e.key === 'F12' || e.keyCode === 123 ||
-       ((e.ctrlKey || e.metaKey) && e.shiftKey && ['I','i','J','j','C','c'].indexOf(e.key) > -1) ||
-       ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U'))){ e.preventDefault(); }
-  }, true);
-  document.addEventListener('dragstart', function(e){ if(!isFormEl(e.target)) e.preventDefault(); });
-  // 캐럿 브라우징(F7)으로 읽는 사용자는 선택을 막지 않는다
-  document.addEventListener('selectstart', function(e){ if(!isFormEl(e.target) && !document.body.hasAttribute('data-caret')) e.preventDefault(); });
-  try { if(sessionStorage.getItem('caret')) document.body.setAttribute('data-caret',''); } catch(err) {}
-  document.addEventListener('keydown', function(e){ if(e.key === 'F7'){ document.body.setAttribute('data-caret',''); try { sessionStorage.setItem('caret','1'); } catch(err) {} } });
-})();
-</script>` : "";
   const tracker = SITE.TRACKER ? `<script defer src="${SITE.TRACKER.src}" data-site="${SITE.TRACKER.site}"></script>` : "";
   return `<!DOCTYPE html>
 <html lang="ko">
@@ -534,19 +539,18 @@ ${headerHtml(file)}
 ${hero}
 ${body}
 </main>
-${footerHtml()}
+${footerHtml(file)}
 <script type="application/json" id="schedData">${SCHED_JSON}</script>
 <script>window.__FORM_ENDPOINT__ = ${JSON.stringify(FORM_ENDPOINT)};</script>
 <script src="${ROOT}app.js?v=${VER}" defer></script>
 ${tracker}
-${protect}
 </body>
 </html>`;
 }
 const HOME = ["홈", "index.html"];
 // 짧은 제목에만 사이트명을 덧붙인다. 긴 제목에 붙이면 뒷부분이 잘려 접미사만 보인다
 const withSuffix = (t) => (t.length + SITE.SUFFIX.length <= SUFFIX_MAX ? t + SITE.SUFFIX : t);
-const webPageLd = (name, desc, file) => ({ "@context": "https://schema.org", "@type": "WebPage", name, description: desc, ...(SITE.BASE_URL ? { url: abs(file) } : {}), inLanguage: "ko-KR", dateModified: TODAY });
+const webPageLd = (name, desc, file) => ({ "@context": "https://schema.org", "@type": "WebPage", name, description: desc, ...(SITE.BASE_URL ? { url: abs(file) } : {}), inLanguage: "ko-KR", dateModified: pageDate(file) });
 
 // ------------------------------------------------------------
 // 홈
@@ -797,7 +801,7 @@ function buildIndex() {
   const body = [introHtml(), solutionsHtml(), statsHtml(), homeScheduleHtml(), voicesHtml(), storyHtml(), homeFaqHtml(), consultHtml()].join("\n");
   return layout({
     file: "index.html", title: SITE.TITLE, desc: SITE.DESC, hero: homeHero(), body,
-    ld: [{ "@context": "https://schema.org", "@type": "WebSite", name: SITE.NAME, ...(SITE.BASE_URL ? { url: abs("index.html") } : {}), inLanguage: "ko-KR", dateModified: TODAY }],
+    ld: [{ "@context": "https://schema.org", "@type": "WebSite", name: SITE.NAME, ...(SITE.BASE_URL ? { url: abs("index.html") } : {}), inLanguage: "ko-KR", dateModified: pageDate("index.html") }],
   });
 }
 
@@ -956,7 +960,7 @@ ${consultHtml({ course: c.name })}`;
           ...(r.fee ? { offers: { "@type": "Offer", price: r.fee, priceCurrency: "KRW", category: "수강료", availability: "https://schema.org/InStock", validFrom: TODAY } } : {}),
         })),
       } : {}),
-      dateModified: TODAY,
+      dateModified: pageDate(courseFile(key)),
     }],
   });
 }
@@ -1057,8 +1061,10 @@ function buildRegion(slug) {
   const pool = REGION.faqPool.map((q) => FAQ_FLAT.find(([qq]) => qq === q)).filter(Boolean);
   const picks = [0, 1, 2].map((i) => pool[(rIdx + i) % pool.length]); // 1칸씩 밀어 이웃 지역끼리 겹치지 않게
   const sub = active.length
-    ? R(REGION.subOpen, r.name).replace("{N}", active.length).replace("{NEXT}", nextLabel(next) || "문의 시 안내")
+    ? ""
     : R(nearRows.length ? REGION.subNone : REGION.subNoneAlone, r.name); // 가까운 지역 기수가 없으면 있다고 말하지 않는다
+  // 모집 중인 기수가 있으면 접속 시점에 다시 센다. 그사이 다 개강하면 아래 가까운 지역 목록이 없으므로 subNoneAlone 으로
+  const subHtml = active.length ? liveSub({ tmpl: R(REGION.subOpen, r.name), none: R(REGION.subNoneAlone, r.name), region: slug, rows: active }) : "";
   const body = `<section class="sec sec-alt sec-tight" id="schedule">
   <div class="wrap">
     ${/* 개설 기록이 없으면 바로 아래 안내 문단이 같은 말을 하므로 sub를 비운다 */ ""}
@@ -1155,7 +1161,7 @@ ${consultHtml({ region: r.name })}`;
       `담당 ${br.label}.`,
       mine.length ? `${r.name} 동문회 활동(${mine[0].acts.slice(0, 3).join("·")})까지 안내합니다.` : "수강료와 등록 절차를 안내합니다.",
     ].join(" "),
-    hero: heroSm({ trail, eyebrow: `${REGION.eyebrow} · ${br.label}`, title: [`${r.name}에서 열리는`, "데일카네기 과정"], sub, actions: [["상담 신청", "#consult", true], ["개강 일정 보기", "#schedule"]] }),
+    hero: heroSm({ trail, eyebrow: `${REGION.eyebrow} · ${br.label}`, title: [`${r.name}에서 열리는`, "데일카네기 과정"], sub, subHtml, actions: [["상담 신청", "#consult", true], ["개강 일정 보기", "#schedule"]] }),
     body, trail,
     ld: [
       webPageLd(`${r.name} 데일카네기 과정`, `${r.name} 지역 개강 일정과 담당 지사 안내`, regionFile(slug)),
@@ -1625,9 +1631,11 @@ function buildCombo(slug, t) {
   const allRows = SCHEDULE.filter((x) => x.region === slug); // 주제와 무관하게 그 지역 전체 이력
   const trail = [HOME, ["주제별 안내", "topics.html"], [t.kw, topicFile(t)], [r.name, null]];
   const preset = t.courses[0] === "corporate" ? { course: "기업 맞춤 교육", region: r.name } : { course: COURSES[t.courses[0]].name, region: r.name };
-  const sub = active.length
-    ? `${R(t.regionLead, r.name)} 지금 ${active.length}개 기수를 모집하고 있고, 가장 빠른 개강은 ${nextLabel(next)}입니다.`
-    : `${R(t.regionLead, r.name)} 지금 이 주제로 열린 기수는 없지만 상담은 받고 있습니다.`;
+  const subNone = `${R(t.regionLead, r.name)} 지금 이 주제로 열린 기수는 없지만 상담은 받고 있습니다.`;
+  const sub = active.length ? "" : subNone;
+  const subHtml = active.length
+    ? liveSub({ tmpl: `${R(t.regionLead, r.name)} 지금 {N}개 기수를 모집하고 있고, 가장 빠른 개강은 {NEXT}입니다.`, none: subNone, region: slug, courses: t.courses, rows: active })
+    : "";
   const body = `<section class="sec">
   <div class="wrap narrow prose reveal">
     <p class="eyebrow">${esc(r.name)}</p>
@@ -1720,7 +1728,7 @@ ${consultHtml(preset)}`;
     file: comboFile(slug, t),
     title: `${name}${active.length ? ` | ${active.length}개 기수 모집` : ""}`,
     desc: `${R(t.regionLead, r.name)} ${active.length ? `${YEAR_LABEL} ${active.length}개 기수 모집 중${next ? `, 가장 빠른 개강 ${next.open}` : ""}.` : "개설 문의와 가까운 지역 기수를 안내합니다."} 담당 ${br.label}.`,
-    hero: heroSm({ trail, badge: t.kw, eyebrow: `${br.label} · ${r.name}`, title: [`${r.name}에서 찾는`, t.kw], sub, actions: [["상담 신청", "#consult", true], ["개강 일정 보기", "#schedule"]] }),
+    hero: heroSm({ trail, badge: t.kw, eyebrow: `${br.label} · ${r.name}`, title: [`${r.name}에서 찾는`, t.kw], sub, subHtml, actions: [["상담 신청", "#consult", true], ["개강 일정 보기", "#schedule"]] }),
     body, trail,
     ld: [
       webPageLd(name, R(t.regionLead, r.name), comboFile(slug, t)),
@@ -1791,7 +1799,7 @@ for (const f of ASSETS) {
 }
 fs.writeFileSync(path.join(OUT, ".nojekyll"), "");
 if (SITE.BASE_URL) {
-  const urls = PAGE_LIST.map(([f]) => f).filter((f) => f !== "404.html").map((f) => `  <url><loc>${abs(f)}</loc><lastmod>${TODAY}</lastmod></url>`).join("\n");
+  const urls = PAGE_LIST.map(([f]) => f).filter((f) => f !== "404.html").map((f) => `  <url><loc>${abs(f)}</loc><lastmod>${pageDate(f)}</lastmod></url>`).join("\n");
   fs.writeFileSync(path.join(OUT, "sitemap.xml"), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`);
   fs.writeFileSync(path.join(OUT, "robots.txt"), `User-agent: *\nAllow: /\nSitemap: ${SITE.BASE_URL}/sitemap.xml\n`);
   // 도메인은 Cloudflare Worker 커스텀 도메인으로 붙였다(wrangler.toml).

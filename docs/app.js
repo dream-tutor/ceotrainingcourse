@@ -172,6 +172,17 @@
       b.hidden = !n;
     });
 
+    // 지역·조합 페이지 히어로 문장 — 그 지역(주제가 있으면 그 과정들)만 센다.
+    // 모두 개강해 남은 기수가 없으면 빌드 때 넣어 둔 '열린 기수 없음' 문장으로 바꾼다
+    $$("[data-live-sub]").forEach((el) => {
+      const reg = el.dataset.region, ks = (el.dataset.courses || "").split(" ").filter(Boolean);
+      const mine = active.filter((r) => r.r === reg && (!ks.length || ks.includes(r.k)));
+      if (!mine.length) { el.textContent = el.dataset.none || ""; return; }
+      const n = $("[data-n]", el), nx = $("[data-next]", el), s = soonest(mine);
+      if (n) n.textContent = mine.length;
+      if (nx) nx.textContent = s ? `${s.d}(${s.w})` : "문의 시 안내";
+    });
+
     // 카드 아래 '모집 현황' 줄 — 과정별/지역별로 좁혀서 센다
     $$("[data-live-course], [data-live-region]").forEach((el) => {
       const txt = $(".live-txt", el);
@@ -537,6 +548,15 @@
         form.elements[bad[0]].focus();
         return;
       }
+      // 뒷자리만 적어도, 010부터 다 적어도 된다. 숫자가 7자리보다 적으면 연락드릴 수 없는 번호라 여기서 멈춘다
+      if (get("연락처").replace(/\D/g, "").length < 7) {
+        const el = form.elements["연락처"];
+        el.classList.add("is-bad");
+        el.setAttribute("aria-invalid", "true");
+        showError("연락처를 다시 확인해 주세요. 휴대전화 뒷자리 7~8자리를 적어 주시면 됩니다.");
+        el.focus();
+        return;
+      }
       if (!agree.checked) {
         agree.classList.add("is-bad");
         agree.setAttribute("aria-invalid", "true");
@@ -551,7 +571,7 @@
       const data = {
         "이름": get("이름"), "연락처": normTel(get("연락처앞") || "010", get("연락처")), "소속": org, "직급": rank,
         "소속직급": org + (rank ? " " + rank : ""), // 구버전 GAS 호환
-        "관심과정": get("관심과정"), "지역": get("지역"), "문의내용": get("문의내용"),
+        "관심과정": get("관심과정"), "지역": get("지역"), "문의내용": get("문의내용").slice(0, 1000), // 칸에도 maxlength=1000 — GET 주소가 길어지면 접수가 중간에 끊긴다
         "신청일": new Date().toLocaleString("ko-KR"),
         "유입페이지": location.href, "유입페이지제목": document.title,
         "유입경로": document.referrer || "직접입력",
