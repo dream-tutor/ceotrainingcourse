@@ -33,7 +33,9 @@ npx wrangler deploy          # wrangler.toml 의 [assets] directory=./docs 를 �
   도메인을 바꿀 때만 건드린다.
 - `rss.xml`(네이버 서치어드바이저 제출용)은 조합 페이지를 뺀 75장이다. 날짜는 공개일로 고정했다 —
   빌드 날짜를 넣으면 빌드할 때마다 모든 글이 새 글처럼 보인다. 새 페이지를 더하면 `RSS_DATES` 에 그 파일만 그날 날짜로 적는다.
-- `src/worker.js` 는 **http 로 들어온 요청**과 대표 도메인이 아닌 호스트(www·workers.dev)를 https 대표 주소로 301 한다(2026-09-29).
+- `src/worker.js` 는 **http 로 들어온 요청**과 대표 도메인이 아닌 호스트(www 등)를 https 대표 주소로 301 한다(2026-09-29).
+- `/index.html` 직접 요청은 `/` 로 301 한다(2026-09-30, 스쿨링트립과 같음) — 홈 canonical·sitemap 이 `/` 라서. 다른 `.html` 주소는 그대로 200 이다.
+- `workers_dev = false`(2026-09-30) — `ceotrainingcourse.zskykr.workers.dev` 는 닫혀 있다(404). 대표 도메인 하나만 연다.
 - `.wrangler/`(계정 ID·계정 이름이 든 로컬 캐시)는 커밋하지 않는다(`.gitignore`, 2026-09-29 추적 해제 — 옛 커밋에는 남아 있다).
 
 ### 개강일이 지나면 다시 빌드·배포
