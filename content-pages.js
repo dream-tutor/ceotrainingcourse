@@ -134,7 +134,7 @@ const PAGES = {
   reviews: {
     eyebrow: "Voices",
     title: ["먼저 경험한", "사람들의 말"],
-    sub: "과정을 마친 분들이 직접 남긴 말입니다. 이름 일부는 가려져 있습니다.",
+    sub: "과정을 마친 분들이 남긴 글을 간추린 내용입니다. 이름은 가려져 있습니다.",
   },
   faq: {
     eyebrow: "FAQ",

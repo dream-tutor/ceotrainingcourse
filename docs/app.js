@@ -443,7 +443,7 @@
     track.scrollBy({ left: step * +btn.dataset.dir, behavior: reduce ? "auto" : "smooth" });
   }));
 
-  // ---------- 수강 후기 전문 팝업 (홈) ----------
+  // ---------- 수강 후기 팝업 (홈) ----------
   (() => {
     const dlg = $("#rvDialog");
     const raw = $("#rvData");

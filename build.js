@@ -9,7 +9,7 @@
 //   regions.html          지역별 안내                  +  region-<slug>.html 지역별 24개
 //   concerns.html         고민별 안내                  +  concern-<slug>.html 12개
 //   corporate.html        기업 맞춤 교육
-//   reviews.html          추천의 글 · 수강 후기 전문
+//   reviews.html          추천의 글 · 수강 후기 발췌
 //   about.html            데일 카네기 소개
 //   faq.html              자주 묻는 질문
 //   404.html              없는 주소
@@ -20,7 +20,9 @@
 // ============================================================
 const fs = require("fs");
 const path = require("path");
-const { YEAR_LABEL, FORM_ENDPOINT, PHONE, SCHEDULE, REGIONS, BRANCH, COURSES, REVIEWS, ALUMNI } = require("../site/data.js");
+const { YEAR_LABEL, FORM_ENDPOINT, PHONE, SCHEDULE, REGIONS, BRANCH, COURSES, REVIEWS: REVIEWS_RAW, ALUMNI } = require("../site/data.js");
+// 후기는 원문에서 짧게 발췌해 다듬은 것만 싣고, site 1과 다른 대목(alt)을 쓴다 (2026-10-01 사장님 지시)
+const REVIEWS = REVIEWS_RAW.map((r) => ({ ...r, ...(r.alt || {}) }));
 const { ENDORSEMENTS } = require("../site/ceo-content.js"); // 추천의 글 — 공인의 발언이라 원문 인용
 const C = require("./content.js");
 const { COURSE_DETAIL, COURSE_GROUPS } = require("./content-courses.js");
@@ -711,7 +713,7 @@ function voicesHtml() {
           <span class="rv-no">${String(i + 1).padStart(2, "0")}</span>
           <strong>${esc(rv.title)}</strong>
           <span class="rv-ex">${esc(rv.excerpt)}</span>
-          <span class="rv-by">${esc(rv.author)}<i>전문 보기${IC.arrow}</i></span>
+          <span class="rv-by">${esc(rv.author)}<i>더 보기${IC.arrow}</i></span>
         </button></li>`).join("\n        ");
   const data = JSON.stringify(REVIEWS.map((r) => ({ t: r.title, a: r.author, p: r.paras }))).replace(/</g, "\\u003c");
   return `<section class="voices" id="voices">
@@ -1370,12 +1372,13 @@ function buildReviews() {
 
 <section class="sec">
   <div class="wrap narrow">
-    ${secHead({ eyebrow: "Reviews", title: ["수강생이", "남긴 후기"], sub: "과정을 마친 분들이 직접 남긴 말입니다. 이름 일부는 가려져 있습니다." })}
+    ${secHead({ eyebrow: "Reviews", title: ["수강생이", "남긴 후기"], sub: "과정을 마친 분들이 남긴 글을 간추린 내용입니다. 이름은 가려져 있습니다." })}
     <div class="reviews">
       ${REVIEWS.map((rv, i) => `<article class="review reveal" id="rv-${i + 1}">
         <span class="review-no">${String(i + 1).padStart(2, "0")}</span>
         <h3>${esc(rv.title)}</h3>
         <p class="review-by">${esc(rv.author)}</p>
+        <p><strong>${esc(rv.excerpt)}</strong></p>
         <p>${esc(rv.paras[0])}</p>
         ${rv.paras.length > 1 ? `<details class="review-more fold"><summary>이어서 읽기</summary>${rv.paras.slice(1).map((p) => `<p>${esc(p)}</p>`).join("\n        ")}</details>` : ""}
       </article>`).join("\n      ")}
@@ -1386,7 +1389,7 @@ function buildReviews() {
 ${consultHtml()}`;
   return layout({
     file: "reviews.html", title: "수강 후기 | 최고경영자 코스·데일카네기 코스 수료생 이야기",
-    desc: "워렌 버핏, 리 아이아코카, 손병두 등 추천의 글 7편과 데일카네기 최고경영자 코스·DCC 수료생이 남긴 후기 8편 전문. 12주·8주 과정에서 무엇이 달라졌는지 본인의 말로 읽어 보실 수 있습니다.",
+    desc: "워렌 버핏, 리 아이아코카, 손병두 등 추천의 글 7편과 데일카네기 최고경영자 코스·DCC 수료생 후기 8편을 간추린 내용. 12주·8주 과정에서 무엇이 달라졌는지 읽어 보실 수 있습니다.",
     hero: heroSm({ trail, eyebrow: P.eyebrow, title: P.title, sub: P.sub }),
     body, trail, ld: [webPageLd("수강 후기", "데일카네기 과정 수료생 후기", "reviews.html")],
   });
