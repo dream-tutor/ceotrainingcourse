@@ -525,7 +525,9 @@ ${SITE.BASE_URL ? `<meta property="og:image" content="${SITE.BASE_URL}/assets/og
 <meta property="og:image:height" content="630">` : `<meta property="og:image" content="assets/og.png">`}
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0b0c10">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0c10'/%3E%3Cpath d='M14 50V14a36 36 0 0 1 36 36z' fill='%23ff5a2b'/%3E%3C/svg%3E">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
@@ -1795,6 +1797,8 @@ for (const f of existing) if (WILL_WRITE.has(f) || stale.includes(f)) fs.unlinkS
 for (const [name, fn] of PAGE_LIST) fs.writeFileSync(path.join(OUT, name), fn());
 // style.css = 공통(홈) + 하위 페이지. 순서가 중요하다 (뒤쪽이 덮어쓴다)
 fs.writeFileSync(path.join(OUT, "style.css"), ["style.css", "pages.css"].map((f) => fs.readFileSync(path.join(SRC, f), "utf8")).join("\n"));
+// 파비콘 파일 — 네이버·구글은 data: 주소로 넣은 아이콘을 수집하지 못해 검색·광고에 지구본으로 나온다(2026-10-01). 실제 파일을 루트에 둔다
+for (const f of fs.readdirSync(path.join(__dirname, "favicon"))) fs.copyFileSync(path.join(__dirname, "favicon", f), path.join(OUT, f));
 fs.copyFileSync(path.join(SRC, "app.js"), path.join(OUT, "app.js"));
 for (const f of ASSETS) {
   const own = path.join(ASSET_OWN, f);
