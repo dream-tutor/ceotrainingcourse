@@ -478,7 +478,7 @@ function footerHtml(file) {
       <div>${regions}</div>
     </details>
     ${FOLD_OPEN}
-    <p class="ft-fine">과정 일정과 수강료는 사정에 따라 바뀔 수 있습니다. 정확한 내용은 상담 신청으로 확인해 주세요.<span>정보 업데이트 ${pageDate(file).replace(/-/g, ".")}</span></p>
+    <p class="ft-fine"><span class="ft-fine-t">과정 일정과 수강료는 사정에 따라 바뀔 수 있습니다. 정확한 내용은 상담 신청으로 확인해 주세요.<br>광고전화는 정중히 사절합니다.</span><span>정보 업데이트 ${pageDate(file).replace(/-/g, ".")}</span></p>
   </div>
 </footer>
 <div class="float" id="float">
