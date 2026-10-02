@@ -494,6 +494,7 @@ function footerHtml(file) {
 const PAGE_META = new Map();
 
 function layout({ file, title, desc, body, hero, ld = [], trail = null }) {
+  desc = fitDesc(desc);
   PAGE_META.set(file, { title, desc });
   const url = SITE.BASE_URL ? abs(file) : "";
   // 404는 /a/b/c 같은 하위 주소에서도 뜨기 때문에 상대 경로로는 CSS·JS·링크가 전부 깨진다.
@@ -1859,3 +1860,36 @@ if (stale.length) console.warn(`※ 이름이 바뀐 옛 페이지 ${stale.lengt
 if (strays.length) console.warn(`※ 생성기가 만들지 않는 html ${strays.length}개는 그대로 두었습니다: ${strays.join(", ")}`);
 if (!SITE.BASE_URL) console.warn("※ SITE.BASE_URL이 비어 있습니다 — noindex 상태로 빌드했고 sitemap.xml·robots.txt는 만들지 않았습니다. 도메인이 정해지면 build.js 상단에 입력하세요.");
 if (!FORM_ENDPOINT) console.warn("※ FORM_ENDPOINT가 비어 있습니다 — 상담 폼은 데모 모드(시트 기록 없음)로 동작합니다.");
+
+// 검색 결과 설명문 길이 맞춤 (2026-10-02 사장님 지시 "너무 긴 설명이라 잘리는 것 수정").
+// 네이버는 80자 안팎에서 자른다. 글 중간에서 끊기지 않게 문장 단위로 줄이고,
+// 첫 문장부터 길면 쉼표·가운뎃점·줄표 자리에서 끊는다. 85자 이하는 그대로 둔다.
+function fitDesc(raw, max = 85) {
+  const s = String(raw || "").replace(/\s+/g, " ").trim();
+  if (s.length <= max) return s;
+  const sents = s.split(/(?<=[.?!])\s+/);
+  let out = "", k = 0;
+  for (; k < sents.length; k++) {
+    const next = out ? out + " " + sents[k] : sents[k];
+    if (next.length > max) break;
+    out = next;
+  }
+  if (out.length >= 45) return out;
+  // 남은 첫 문장을 구절 단위로 덧붙인다
+  const room = max - (out ? out.length + 1 : 0);
+  const parts = sents[k].split(/(?<=[,·—])\s+|\s+(?=[—(])/);
+  let cl = "";
+  for (const p of parts) {
+    const next = cl ? cl + " " + p : p;
+    if (next.length > room) break;
+    cl = next;
+  }
+  cl = cl.replace(/[\s,·—(]+$/, "");
+  // 괄호가 열린 채 끊겼으면 그 괄호 앞까지 물린다
+  while ((cl.match(/\(/g) || []).length > (cl.match(/\)/g) || []).length) cl = cl.slice(0, cl.lastIndexOf("(")).replace(/[\s,·—]+$/, "");
+  // 조사로 끝나 말이 끊기거나 너무 짧은 구절은 붙이지 않는다
+  if (out.length >= 30 && (cl.length < 15 || /(과|와|의|을|를|이|가|에|는|은|도|로|고|며)$/.test(cl))) return out;
+  if (cl.length < 15) return out || s.slice(0, max).replace(/\s+\S*$/, "");
+  if (!/[.?!]$/.test(cl)) cl += ".";
+  return out ? out + " " + cl : cl;
+}
