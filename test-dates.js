@@ -73,8 +73,9 @@ console.log("5. 오늘 기준 표본");
   const active = SCHEDULE.filter((r) => D.isActive(r, ref));
   const regions = new Set(active.map((r) => r.region)).size;
   console.log(`   모집 중 ${active.length}개 기수 · ${regions}개 지역`);
-  check(active.length === 15, `모집 기수 ${active.length} (기대 15)`);
-  check(regions === 11, `모집 지역 ${regions} (기대 11)`);
+  // 2026-10-06 세종 CEO 1기가 본사 목록에서 빠져 15·11 → 14·10
+  check(active.length === 14, `모집 기수 ${active.length} (기대 14)`);
+  check(regions === 10, `모집 지역 ${regions} (기대 10)`);
 }
 
 console.log(fail ? `\n실패 ${fail}건` : "\n전부 통과");
