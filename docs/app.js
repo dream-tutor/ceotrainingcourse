@@ -265,8 +265,9 @@
     const narrow = window.matchMedia("(max-width: 760px)");
     // all: 모집 중인 기수를 끝까지 펼쳤는지 / past: 이미 개강한 기수까지 보는지
     const state = { group: "all", region: "all", all: false, past: false };
-    // 주소의 ?group=ceo&region=seoul 로 필터를 미리 맞춘다 (과정·지역 페이지에서 넘어올 때)
-    const q = new URLSearchParams(location.search);
+    // 주소의 #group=ceo&region=seoul 로 필터를 미리 맞춘다 (과정·지역 페이지에서 넘어올 때).
+    // 쿼리(?)로 넘기면 네이버가 주소마다 별개 문서로 봐 중복 제목으로 잡는다 — 해시를 쓴다(2026-10-07)
+    const q = new URLSearchParams(location.hash.slice(1) || location.search);
     if (pills.some((p) => p.dataset.group === q.get("group"))) state.group = q.get("group");
     if ([...select.options].some((o) => o.value === q.get("region"))) state.region = q.get("region");
     const apply = () => {

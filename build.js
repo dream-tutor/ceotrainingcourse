@@ -197,7 +197,7 @@ function headerHtml(file) {
   <div class="wrap hd-in">
     <a class="hd-brand" href="index.html" aria-label="Dale Carnegie ${SITE.TAG} 홈으로">
       <img class="logo logo-w" src="assets/dc-logo-white.png" alt="Dale Carnegie" width="900" height="229">
-      <img class="logo logo-b" src="assets/dc-logo-black.png" alt="" width="900" height="229" aria-hidden="true">
+      <img class="logo logo-b" src="assets/dc-logo-black.png" alt="Dale Carnegie" width="900" height="229" aria-hidden="true">
       <span class="hd-tag">${SITE.TAG}</span>
     </a>
     <nav class="hd-nav" aria-label="주요 메뉴">${links}</nav>
@@ -325,7 +325,7 @@ function courseFeature(k) {
   const c = COURSES[k];
   const d = COURSE_DETAIL[k];
   return `<a class="feature reveal" href="${courseFile(k)}">
-        <span class="feature-fig"><img src="assets/${d.img}" alt="" loading="lazy" decoding="async" aria-hidden="true"></span>
+        <span class="feature-fig"><img src="assets/${d.img}" alt="${esc(c.name)} 교육 현장" loading="lazy" decoding="async" aria-hidden="true"></span>
         <span class="feature-body">
           <span class="card-code">${esc(c.code)}</span>
           <strong>${esc(c.name)}</strong>
@@ -587,12 +587,12 @@ function homeHero() {
       ${slides}
     </div>
     <div class="mosaic" aria-hidden="true">
-      <div class="tile t1 ph"><img src="assets/class-006.jpg" alt="" width="1200" height="757"></div>
+      <div class="tile t1 ph"><img src="assets/class-006.jpg" alt="데일카네기 교육 현장" width="1200" height="757"></div>
       <div class="tile t2"></div>
       <div class="tile t3"><span>Since<br><b>1912</b></span></div>
       <div class="tile t4"><span>Human<br>Relations</span></div>
-      <div class="tile t5 ph"><img src="assets/dale-book.jpg" alt="" width="1200" height="900"></div>
-      <div class="tile t6 ph"><img src="assets/class-001.jpg" alt="" width="1200" height="900"></div>
+      <div class="tile t5 ph"><img src="assets/dale-book.jpg" alt="데일 카네기의 책" width="1200" height="900"></div>
+      <div class="tile t6 ph"><img src="assets/class-001.jpg" alt="데일카네기 수업 장면" width="1200" height="900"></div>
       <div class="tile t7"><span>Learning<br>by Doing</span></div>
       <div class="tile t8"></div>
     </div>
@@ -919,7 +919,7 @@ ${d.admission ? `
   <div class="wrap">
     ${secHead({ eyebrow: "Schedule", title: `${c.name} 개강 일정`, sub: active.length ? `${YEAR_LABEL} 일정입니다. 접수는 개강 일주일 전까지 받고, 정원이 차면 먼저 마감합니다.` : "지금 모집 중인 기수가 없습니다. 상담 신청에 지역을 적어 주시면 다음 기수 일정이 정해지는 대로 먼저 안내해 드립니다." })}
     ${rows.length ? schedListHtml(rows) : ""}
-    <p class="sec-link reveal"><a href="schedule.html?group=${d.group}">전체 개강 일정 보기 →</a></p>
+    <p class="sec-link reveal"><a href="schedule.html#group=${d.group}">전체 개강 일정 보기 →</a></p>
   </div>
 </section>
 ${related.length ? `
@@ -1080,7 +1080,7 @@ function buildRegion(slug) {
       <p>${esc(r.name)}에서 가까운 곳입니다. 등록하시면 그 지역 기수로 안내해 드립니다.</p>
       ${schedListHtml(nearRows)}
     </div>` : ""}
-    <p class="sec-link reveal"><a href="schedule.html?region=${slug}">전체 개강 일정에서 보기 →</a></p>
+    <p class="sec-link reveal"><a href="schedule.html#region=${slug}">전체 개강 일정에서 보기 →</a></p>
   </div>
 </section>
 

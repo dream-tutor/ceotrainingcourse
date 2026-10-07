@@ -25,6 +25,17 @@ export default {
       return Response.redirect(url.toString(), 301);
     }
 
+    // 옛 일정 필터 주소 schedule.html?region=…/?group=… 는 #region=… 로 301 (2026-10-07).
+    // 네이버가 쿼리 27갈래를 별개 문서로 보고 '동일 제목·설명문 27건'으로 잡았다.
+    // 필터는 이제 해시로 넘기고(검색엔진은 해시를 무시), 이미 수집된 주소는 여기서 하나로 모은다.
+    if (url.pathname === "/schedule.html" && url.search) {
+      const q = new URLSearchParams(url.search);
+      const keep = new URLSearchParams();
+      for (const k of ["group", "region"]) if (q.get(k)) keep.set(k, q.get(k));
+      const hash = keep.toString();
+      return Response.redirect(`https://${DOMAIN}/schedule.html${hash ? "#" + hash : ""}`, 301);
+    }
+
     if (url.pathname === "/" || url.pathname.endsWith("/")) {
       const to = new URL(request.url);
       to.pathname += "index.html";
