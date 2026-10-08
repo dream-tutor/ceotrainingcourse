@@ -41,8 +41,8 @@ const SITE = {
   BASE_URL: "https://ceotrainingcourse.com",
   NAME: "데일카네기 리더십 트레이닝",
   TAG: "리더십 트레이닝", // 헤더 로고 옆 한글 표기
-  TITLE: `데일카네기 리더십 교육 | 최고경영자 코스·DCC·기업교육 ${YEAR_LABEL} 일정`,
-  DESC: `데일카네기 최고경영자 코스, 데일카네기 코스(DCC), 리더십·프레젠테이션 과정과 기업 맞춤 교육 안내. ${YEAR_LABEL} 전국 개강 일정과 상담 신청.`,
+  TITLE: `데일카네기 리더십 교육 | 최고경영자 코스·DCC ${YEAR_LABEL}`,
+  DESC: `데일카네기 최고경영자 코스, 데일카네기 코스(DCC), 리더십·프레젠테이션 과정, 기업 맞춤 교육, ${YEAR_LABEL} 일정, 무료 상담`,
   SUFFIX: " | 데일카네기 리더십 트레이닝",
   // 우클릭·F12·드래그·텍스트 선택 막기는 넣지 않는다(2026-09-15 과외 계열에서 해제 — 방문자가 번호·주소를
   // 복사하지 못하는 부작용. 첫 사이트도 2026-09-29 해제). 꺼 둔 채 남아 있던 코드도 09-29에 지웠다
@@ -494,6 +494,7 @@ function footerHtml(file) {
 const PAGE_META = new Map();
 
 function layout({ file, title, desc, body, hero, ld = [], trail = null }) {
+  title = fitTitle(title);
   desc = fitDesc(desc);
   PAGE_META.set(file, { title, desc });
   const url = SITE.BASE_URL ? abs(file) : "";
@@ -1861,10 +1862,19 @@ if (strays.length) console.warn(`※ 생성기가 만들지 않는 html ${strays
 if (!SITE.BASE_URL) console.warn("※ SITE.BASE_URL이 비어 있습니다 — noindex 상태로 빌드했고 sitemap.xml·robots.txt는 만들지 않았습니다. 도메인이 정해지면 build.js 상단에 입력하세요.");
 if (!FORM_ENDPOINT) console.warn("※ FORM_ENDPOINT가 비어 있습니다 — 상담 폼은 데모 모드(시트 기록 없음)로 동작합니다.");
 
+// 제목 길이 맞춤 (2026-10-08 네이버 사이트 진단 권고 40자). 끝의 괄호 덧말, ' + 덧붙임' 순으로 덜어 낸다.
+function fitTitle(raw, max = 40) {
+  let t = String(raw || "").trim();
+  if (t.length <= max) return t;
+  t = t.replace(/\s*\([^()]*\)$/, "");
+  if (t.length > max) t = t.replace(/\s*\+[^|]*$/, "");
+  return t;
+}
+
 // 검색 결과 설명문 길이 맞춤 (2026-10-02 사장님 지시 "너무 긴 설명이라 잘리는 것 수정").
 // 네이버는 80자 안팎에서 자른다. 글 중간에서 끊기지 않게 문장 단위로 줄이고,
-// 첫 문장부터 길면 쉼표·가운뎃점·줄표 자리에서 끊는다. 85자 이하는 그대로 둔다.
-function fitDesc(raw, max = 85) {
+// 첫 문장부터 길면 쉼표·가운뎃점·줄표 자리에서 끊는다. 80자 이하는 그대로 둔다(2026-10-08 네이버 사이트 진단 권고 80자 — 전엔 85).
+function fitDesc(raw, max = 80) {
   const s = String(raw || "").replace(/\s+/g, " ").trim();
   if (s.length <= max) return s;
   const sents = s.split(/(?<=[.?!])\s+/);
