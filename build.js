@@ -20,7 +20,7 @@
 // ============================================================
 const fs = require("fs");
 const path = require("path");
-const { YEAR_LABEL, FORM_ENDPOINT, PHONE, SCHEDULE, REGIONS, BRANCH, COURSES, REVIEWS: REVIEWS_RAW, ALUMNI } = require("../site/data.js");
+const { YEAR_LABEL, NEXT_TERM, FORM_ENDPOINT, PHONE, SCHEDULE, REGIONS, BRANCH, COURSES, REVIEWS: REVIEWS_RAW, ALUMNI } = require("../site/data.js");
 // 후기는 원문에서 짧게 발췌해 다듬은 것만 싣고, site 1과 다른 대목(alt)을 쓴다 (2026-10-01 사장님 지시)
 const REVIEWS = REVIEWS_RAW.map((r) => ({ ...r, ...(r.alt || {}) }));
 const { ENDORSEMENTS } = require("../site/ceo-content.js"); // 추천의 글 — 공인의 발언이라 원문 인용
@@ -29,6 +29,7 @@ const { COURSE_DETAIL, COURSE_GROUPS } = require("./content-courses.js");
 const { CONCERNS } = require("./content-concerns.js");
 const { ABOUT, CORPORATE, REGION, PAGES } = require("./content-pages.js");
 const { TOPICS } = require("./content-topics.js");
+const { NEXT_COHORT, YOUTH_CAMP } = require("./content-extra.js"); // 다음 기수 대기·청소년 캠프 (2026-10-15)
 
 // ------------------------------------------------------------
 // 사이트 설정
@@ -406,7 +407,9 @@ function consultHtml(preset = {}) {
   const K = C.CONSULT;
   const sel = (v, p) => (p && v === p ? " selected" : "");
   const courseOpts = Object.values(COURSES).map((c) => `<option value="${esc(c.name)}"${sel(c.name, preset.course)}>${esc(c.name)} (${c.code})</option>`).join("")
-    + `<option value="기업 맞춤 교육"${sel("기업 맞춤 교육", preset.course)}>기업 맞춤 교육 (사내·단체)</option><option value="기타 문의">기타 문의</option>`;
+    + `<option value="기업 맞춤 교육"${sel("기업 맞춤 교육", preset.course)}>기업 맞춤 교육 (사내·단체)</option>`
+    + `<option value="${esc(CAMP_OPTION)}"${sel(CAMP_OPTION, preset.course)}>${esc(CAMP_OPTION)} (방학)</option><option value="${esc(NEXT_OPTION)}"${sel(NEXT_OPTION, preset.course)}>${esc(NEXT_OPTION)} (대기 문의)</option>`
+    + `<option value="기타 문의">기타 문의</option>`;
   const regionOpts = Object.values(REGIONS).map((r) => `<option value="${esc(r.name)}"${sel(r.name, preset.region)}>${esc(r.name)}</option>`).join("") + `<option value="기타/미정">기타/미정</option>`;
   return `<dialog class="consult-dlg" id="consult" aria-labelledby="consultT">
   <button type="button" class="dlg-x" data-close aria-label="닫기">${IC.close}</button>
@@ -919,6 +922,8 @@ ${d.admission ? `
 <section class="sec" id="schedule">
   <div class="wrap">
     ${secHead({ eyebrow: "Schedule", title: `${c.name} 개강 일정`, sub: active.length ? `${YEAR_LABEL} 일정입니다. 접수는 개강 일주일 전까지 받고, 정원이 차면 먼저 마감합니다.` : "지금 모집 중인 기수가 없습니다. 상담 신청에 지역을 적어 주시면 다음 기수 일정이 정해지는 대로 먼저 안내해 드립니다." })}
+    ${cohortNote(rows)}
+    ${key === "youth" ? `<div class="callout callout-next reveal"><strong>방학 캠프</strong><p>${esc(YOUTH_CAMP.courseNote)} <a href="youth-leadership-camp.html">청소년 리더십 캠프 안내 →</a></p></div>` : ""}
     ${rows.length ? schedListHtml(rows) : ""}
     <p class="sec-link reveal"><a href="schedule.html#group=${d.group}">전체 개강 일정 보기 →</a></p>
   </div>
@@ -981,6 +986,7 @@ function buildSchedule() {
   const body = `<section class="sec sec-alt sec-tight" id="schedule">
   <div class="wrap">
     <h2 class="sr">전체 개강 일정</h2>
+    ${cohortNote(SCHEDULE, { all: true })}
     ${schedListHtml(SCHEDULE, { tools: true })}
   </div>
 </section>
@@ -1074,7 +1080,8 @@ function buildRegion(slug) {
   const body = `<section class="sec sec-alt sec-tight" id="schedule">
   <div class="wrap">
     ${/* 개설 기록이 없으면 바로 아래 안내 문단이 같은 말을 하므로 sub를 비운다 */ ""}
-    ${secHead({ eyebrow: "Schedule", title: R(REGION.scheduleTitle, r.name), sub: active.length ? C.SCHEDULE_COPY.sub : rows.length ? R(REGION.subPast, r.name) : "" })}
+    ${secHead({ eyebrow: "Schedule", title: R(REGION.scheduleTitle, r.name), sub: active.length ? C.SCHEDULE_COPY.sub : rows.length ? R(REGION.subPast, r.name) + ` 다음 기수는 ${NEXT_TERM}로 예정돼 있으며, 일정은 신청 인원에 따라 정해집니다.` : "" })}
+    ${!active.length && rows.length ? `<p class="sec-link reveal"><a href="next-cohort.html">${esc(NEXT_TERM)} 다음 기수 사전 안내 →</a></p>` : ""}
     ${rows.length ? schedListHtml(rows) : `<p class="sch-empty reveal">${esc(R(hasHistory ? REGION.waitingPast : REGION.waiting, r.name))} <a href="#consult">상담 신청하기</a></p>`}
     ${nearRows.length ? `<div class="near-sched reveal">
       <h3>${esc(br.label)} 관할에서 지금 모집 중인 기수</h3>
@@ -1768,6 +1775,160 @@ ${consultHtml()}`;
 // ------------------------------------------------------------
 // 출력
 // ------------------------------------------------------------
+// ------------------------------------------------------------
+// 다음 기수 대기 안내 · 청소년 리더십 캠프 (2026-10-15 사장님)
+//   ⚠ 개강일·수강료·캠프 일정은 모집 인원에 따라 바뀐다 — 날짜·금액을 쓰지 말고 상담에서 안내
+// ------------------------------------------------------------
+const nx = (s) => String(s).replace(/\{NEXT\}/g, NEXT_TERM).replace(/\{YEAR\}/g, YEAR_LABEL);
+// 개강한 기수가 있으면 과정·일정·지역 페이지 일정 머리에 붙이는 안내
+function cohortNote(rows, { all = false } = {}) {
+  const past = rows.filter((r) => !isActive(r));
+  if (!past.length) return "";
+  const txt = nx(all ? NEXT_COHORT.noteAll : NEXT_COHORT.note).replace("{N}", past.length);
+  return `<div class="callout callout-next reveal"><strong>${esc(NEXT_TERM)} 안내</strong><p>${esc(txt)} <a href="next-cohort.html">다음 기수 사전 안내 →</a></p></div>`;
+}
+const NEXT_OPTION = `${NEXT_TERM} 과정 사전 안내`;
+const CAMP_OPTION = "청소년 리더십·소통 캠프";
+
+function buildNextCohort() {
+  const N = NEXT_COHORT;
+  const past = SCHEDULE.filter((r) => !isActive(r));
+  const trail = [HOME, ["개강 일정", "schedule.html"], ["다음 기수 사전 안내", null]];
+  const body = `<section class="sec">
+  <div class="wrap narrow prose reveal">
+    <p class="eyebrow">Why wait</p>
+    <h2 class="h-lg">${tl(["개강이 지난 기수에", "들어가지 않는 이유"])}</h2>
+    ${N.why.map((p) => `<p>${esc(p)}</p>`).join("\n    ")}
+  </div>
+</section>
+
+<section class="sec sec-alt">
+  <div class="wrap">
+    ${secHead({ eyebrow: "How it works", title: ["사전 안내는", "이렇게 진행됩니다"] })}
+    <ul class="o-grid reveal">
+      ${N.steps.map(([t, p], i) => `<li><span class="n">0${i + 1}</span><strong>${esc(t)}</strong><p>${esc(nx(p))}</p></li>`).join("\n      ")}
+    </ul>
+    <p class="sec-link reveal"><a href="#consult" data-preset-course="${esc(NEXT_OPTION)}">${esc(NEXT_TERM)} 사전 안내 신청 →</a></p>
+  </div>
+</section>
+${ACTIVE.length ? `
+<section class="sec" id="open">
+  <div class="wrap">
+    ${secHead({ eyebrow: "Still open", title: "아직 접수 중인 기수", sub: "올해 시작하고 싶으시면 먼저 확인해 보세요. 신청 상황에 따라 일찍 마감되거나 일정이 바뀔 수 있습니다." })}
+    ${schedListHtml(ACTIVE)}
+  </div>
+</section>` : ""}
+
+<section class="sec${ACTIVE.length ? " sec-alt" : ""}">
+  <div class="wrap">
+    ${secHead({ eyebrow: "Started", title: `${YEAR_LABEL} 개강한 기수`, sub: `지금 수업이 진행 중인 기수입니다. 같은 지역의 다음 기수는 ${NEXT_TERM}에 열릴 예정입니다.` })}
+    ${schedListHtml(past)}
+  </div>
+</section>
+
+<section class="sec sec-alt" id="faq">
+  <div class="wrap narrow">
+    ${secHead({ eyebrow: "FAQ", title: "기다리시는 분들이 묻는 것" })}
+    <div class="faq-panel reveal">
+      ${N.faq.map(([q, a], i) => faqItem(q, nx(a), i + 1, i === 0)).join("\n      ")}
+    </div>
+  </div>
+</section>
+${consultHtml({ course: NEXT_OPTION })}`;
+  return layout({
+    file: "next-cohort.html",
+    title: `${NEXT_TERM} 다음 기수 사전 안내 | 최고경영자 코스`,
+    desc: `데일카네기 최고경영자 코스 다음 기수 ${NEXT_TERM} 예정, 개강 지난 지역 대기 신청, 지역별 일정 상담 안내, 올해 접수 중인 기수.`,
+    hero: heroSm({ trail, badge: NEXT_TERM, eyebrow: N.eyebrow, title: N.title.map(nx), sub: nx(N.sub), actions: [["사전 안내 신청", "#consult", true], ["접수 중인 기수", ACTIVE.length ? "#open" : "schedule.html"]] }),
+    body, trail,
+    ld: [webPageLd(`${NEXT_TERM} 다음 기수 사전 안내`, nx(N.sub), "next-cohort.html"),
+      { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: N.faq.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: nx(a) } })) }],
+  });
+}
+
+function buildYouthCamp() {
+  const Y = YOUTH_CAMP;
+  const c = COURSES.youth;
+  const trail = [HOME, ["과정 안내", "courses.html"], [c.name, courseFile("youth")], ["리더십 캠프", null]];
+  const body = `<section class="sec">
+  <div class="wrap split">
+    <div class="prose reveal">
+      <p class="eyebrow">About the camp</p>
+      <h2 class="h-lg">${tl(["설명보다", "해 보는 시간이 긴 캠프"])}</h2>
+      ${Y.intro.map((p) => `<p>${esc(p)}</p>`).join("\n      ")}
+    </div>
+    <figure class="split-fig reveal">
+      <img src="assets/class-009.jpg" alt="발표 실습 장면" loading="lazy" decoding="async">
+      <figcaption>${esc(c.eng)}</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="sec sec-alt">
+  <div class="wrap">
+    ${secHead({ eyebrow: "Signs", title: ["이런 모습이 보이면", "캠프가 도움이 됩니다"] })}
+    <ul class="ticks-2 reveal">${Y.signs.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="wrap">
+    ${secHead({ eyebrow: "Four pillars", title: ["캠프에서", "다루는 네 가지"] })}
+    <ul class="o-grid o-grid-4 reveal">
+      ${Y.pillars.map(([t, en, p], i) => `<li><span class="n">0${i + 1}</span><strong>${esc(t)} <em>${esc(en)}</em></strong><p>${esc(p)}</p></li>`).join("\n      ")}
+    </ul>
+  </div>
+</section>
+
+<section class="sec sec-alt">
+  <div class="wrap">
+    ${secHead({ eyebrow: "Three days", title: "사흘의 흐름", sub: c.duration })}
+    <ol class="cur reveal">
+      ${Y.days.map(([k, v]) => `<li><b>${esc(k)}</b><span>${esc(v)}</span></li>`).join("\n      ")}
+    </ol>
+    <p class="note">회차별 정규 커리큘럼은 <a href="${courseFile("youth")}">${esc(c.name)}</a> 페이지에 있습니다.</p>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="wrap">
+    ${secHead({ eyebrow: "By grade", title: ["학년에 따라", "힘을 주는 곳이 다릅니다"] })}
+    <ul class="o-grid reveal">
+      ${Y.grades.map(([t, p]) => `<li><strong>${esc(t)}</strong><p>${esc(p)}</p></li>`).join("\n      ")}
+    </ul>
+  </div>
+</section>
+
+<section class="sec sec-alt">
+  <div class="wrap">
+    ${secHead({ eyebrow: "Formats", title: "운영 방식", sub: "캠프 날짜와 장소는 신청 인원을 보고 정하는 경우가 많아 상담에서 안내해 드립니다." })}
+    <ul class="o-grid reveal">
+      ${Y.formats.map(([t, p]) => `<li><strong>${esc(t)}</strong><p>${esc(p)}</p></li>`).join("\n      ")}
+    </ul>
+    <p class="sec-link reveal"><a href="#consult" data-preset-course="${esc(CAMP_OPTION)}">캠프 상담 신청 →</a></p>
+  </div>
+</section>
+
+<section class="sec" id="faq">
+  <div class="wrap narrow">
+    ${secHead({ eyebrow: "FAQ", title: "부모님이 자주 묻는 것" })}
+    <div class="faq-panel reveal">
+      ${Y.faq.map(([q, a], i) => faqItem(q, a, i + 1, i === 0)).join("\n      ")}
+    </div>
+  </div>
+</section>
+${consultHtml({ course: CAMP_OPTION })}`;
+  return layout({
+    file: "youth-leadership-camp.html",
+    title: "청소년 리더십 캠프 | 방학 3일 소통·발표 과정",
+    desc: "청소년 리더십 캠프, 초·중·고 대상, 방학 3일 소통·발표·관계·리더십 연습, 학교·단체 캠프 가능, 일정·참가비 상담 안내.",
+    hero: heroSm({ trail, badge: "YOUTH", eyebrow: Y.eyebrow, title: Y.title, sub: Y.sub, extra: `<dl class="hero-meta"><div><dt>기간</dt><dd>${esc(c.duration)}</dd></div><div><dt>대상</dt><dd>${esc(c.target)}</dd></div><div><dt>일정</dt><dd>상담 시 안내</dd></div></dl>`, actions: [["캠프 상담 신청", "#consult", true], ["청소년 코스 보기", courseFile("youth")]] }),
+    body, trail,
+    ld: [{ "@context": "https://schema.org", "@type": "Course", name: "청소년 리더십 캠프", description: Y.sub, provider: { "@type": "Organization", name: "데일카네기코리아" }, ...(SITE.BASE_URL ? { url: abs("youth-leadership-camp.html") } : {}), dateModified: pageDate("youth-leadership-camp.html") },
+      { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: Y.faq.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })) }],
+  });
+}
+
 const PAGE_LIST = [
   ["index.html", buildIndex],
   ["courses.html", buildCourses],
@@ -1784,6 +1945,8 @@ const PAGE_LIST = [
   ["reviews.html", buildReviews],
   ["about.html", buildAbout],
   ["faq.html", buildFaq],
+  ["next-cohort.html", buildNextCohort],
+  ["youth-leadership-camp.html", buildYouthCamp],
   ["404.html", build404],
 ];
 
@@ -1791,7 +1954,7 @@ fs.mkdirSync(path.join(OUT, "assets"), { recursive: true });
 // 지난 빌드의 잔재(이름이 바뀐 페이지)가 남지 않도록 html만 먼저 지운다
 const WILL_WRITE = new Set(PAGE_LIST.map(([n]) => n));
 // 생성기가 만드는 이름 형태 — 이 형태인데 이번 목록에 없으면 이름이 바뀐 옛 페이지이므로 지운다
-const GENERATED = new RegExp("^(index|courses|schedule|regions|concerns|topics|corporate|reviews|about|faq|404|course-[a-z]+|region-[a-z-]+|concern-[a-z-]+|topic-[a-z-]+|[a-z-]+-(" + COMBO_TOPICS.map((t) => t.slug).join("|") + "))\.html$");
+const GENERATED = new RegExp("^(index|courses|schedule|regions|concerns|topics|corporate|reviews|about|faq|404|next-cohort|youth-leadership-camp|course-[a-z]+|region-[a-z-]+|concern-[a-z-]+|topic-[a-z-]+|[a-z-]+-(" + COMBO_TOPICS.map((t) => t.slug).join("|") + "))\.html$");
 const existing = fs.readdirSync(OUT).filter((f) => f.endsWith(".html"));
 const stale = existing.filter((f) => !WILL_WRITE.has(f) && GENERATED.test(f));
 const strays = existing.filter((f) => !WILL_WRITE.has(f) && !GENERATED.test(f));
@@ -1822,7 +1985,7 @@ if (SITE.BASE_URL) {
   // pubDate 는 공개일로 고정한다. 빌드 날짜를 넣으면 빌드할 때마다 모든 글이 새 글처럼 보인다.
   // 나중에 페이지를 새로 더하면 RSS_DATES 에 그 파일만 그날 날짜로 적는다.
   const RSS_LAUNCH = "Tue, 22 Sep 2026 09:00:00 +0900";
-  const RSS_DATES = {};
+  const RSS_DATES = { "next-cohort.html": "Thu, 15 Oct 2026 09:00:00 +0900", "youth-leadership-camp.html": "Thu, 15 Oct 2026 09:00:00 +0900" };
   const RSS_FILES = [
     "index.html", "schedule.html",
     ...COURSE_ORDER.map(courseFile),
@@ -1830,6 +1993,7 @@ if (SITE.BASE_URL) {
     ...TOPICS.map(topicFile),
     ...CONCERNS.map(concernFile),
     "courses.html", "regions.html", "topics.html", "concerns.html", "corporate.html", "reviews.html", "about.html", "faq.html",
+    "next-cohort.html", "youth-leadership-camp.html",
   ];
   const items = RSS_FILES.map((f) => {
     const m = PAGE_META.get(f);
