@@ -7,8 +7,8 @@ export const meta = {
   ],
 }
 
-const ROOT = 'C:/Users/goodj/Desktop/AI/기타(etc)/카네기/site2'
-const SRC = 'C:/Users/goodj/Desktop/AI/기타(etc)/카네기/site'
+const ROOT = 'C:/Users/goodj/Desktop/AI/유학교육(edu)/카네기/site2'
+const SRC = 'C:/Users/goodj/Desktop/AI/유학교육(edu)/카네기/site'
 
 const COMMON = `
 프로젝트: ${ROOT} (데일카네기 공개과정 두 번째 홍보 사이트, 정적 사이트 생성기)
