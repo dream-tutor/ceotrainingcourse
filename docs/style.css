@@ -179,6 +179,15 @@ ul,ol{margin:0;padding:0;list-style:none}
 .hero[data-slide="1"] .t6{border-radius:100% 0 0 0}
 .hero[data-slide="1"] .t7{border-radius:50%}
 .hero[data-slide="1"] .t8{border-radius:0 100% 0 0}
+/* 세 번째 슬라이드 모양 (2026-10-22 사전 안내 슬라이드가 맨 앞에 들어가 슬라이드가 3개) */
+.hero[data-slide="2"] .t1{border-radius:0 0 100% 0}
+.hero[data-slide="2"] .t2{border-radius:50%}
+.hero[data-slide="2"] .t3{border-radius:0 0 0 100%}
+.hero[data-slide="2"] .t4{border-radius:0 999px 999px 0}
+.hero[data-slide="2"] .t5{border-radius:50% 50% 22px 22px / 24% 24% 22px 22px}
+.hero[data-slide="2"] .t6{border-radius:0 0 0 100%}
+.hero[data-slide="2"] .t7{border-radius:0 100% 0 0}
+.hero[data-slide="2"] .t8{border-radius:50%}
 
 .hero-ctrl{display:flex;align-items:center;gap:18px;padding-top:8px;padding-bottom:38px}
 .hero-count{display:flex;align-items:baseline;gap:8px;font-size:14px;font-weight:600;color:rgba(255,255,255,.5);font-variant-numeric:tabular-nums;white-space:nowrap;flex-shrink:0}
@@ -480,6 +489,16 @@ ul,ol{margin:0;padding:0;list-style:none}
   .sch-venue{display:none}
   .rv-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+/* 981~1180px 은 메뉴와 NEW 알약이 함께 떠서 메뉴 끝('데일 카네기')을 덮었다(2026-10-22 실측 1000px -30px, 사전 안내 알약은 -57px) */
+@media (min-width:980.01px) and (max-width:1280px){
+  .hd-nav{font-size:15px}
+  .hd-pill-new{padding:0 14px;font-size:13.5px}
+  .hd-pill-new b{display:none}
+}
+@media (min-width:980.01px) and (max-width:1040px){
+  .hd-in{gap:16px}
+  .hd-nav{gap:14px}
+}
 @media (max-width:980px){
   :root{--hd-h:64px}
   .hd-nav,.hd-pill-cta{display:none}
@@ -490,6 +509,7 @@ ul,ol{margin:0;padding:0;list-style:none}
   .mosaic{grid-template-rows:repeat(2,1fr);aspect-ratio:3/2;max-width:520px;gap:10px}
   .t5{grid-row:2;border-radius:50% 50% 16px 16px / 50% 50% 16px 16px}
   .hero[data-slide="1"] .t5{border-radius:16px 16px 50% 50% / 16px 16px 50% 50%}
+  .hero[data-slide="2"] .t5{border-radius:50% 50% 16px 16px / 50% 50% 16px 16px}
   .t7,.t8{display:none}
   .hero-scroll{display:none}
   .hero-ctrl{padding-bottom:28px}

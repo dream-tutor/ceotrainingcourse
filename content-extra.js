@@ -30,6 +30,30 @@ const NEXT_COHORT = {
   ],
 };
 
+// 사이트 전체에 사전 안내를 앞세울 때 쓰는 문구 (2026-10-22 사장님 "내년 과정 있으니 미리 문의하는 시스템… 사이트에 잘 반영해줘")
+//   build.js PREP(올해 기수 중 개강한 쪽이 더 많을 때)일 때만 나온다 — 내년 SCHEDULE 이 들어오면 저절로 빠진다.
+const PREP_COPY = {
+  pill: "{NEXT} 사전 안내",
+  // 홈 첫 슬라이드 (fill 의 {NEXT} 토큰과 겹치지 않게 nx() 로 먼저 바꾼다)
+  // 10-22 점검: 홈 일정 칸 안내(noteAll)·next-cohort 히어로(NEXT_COHORT.sub)와 같은 구절을 쓰지 않게 따로 썼다.
+  //   올해 남은 기수가 0개가 되면(11.17 뒤) eyebrowAll·cta2All 로 바뀐다 — '대부분'·'남은 일정'이 틀린 말이 되므로
+  slide: {
+    badge: "{NEXT} 사전 안내",
+    eyebrow: "{YEAR} 기수 대부분 개강 · 다음 기수 대기 접수",
+    eyebrowAll: "{YEAR} 기수 모두 개강 · 다음 기수 대기 접수",
+    title: ["올해 일정을 놓치셨다면,", "다음 기수 소식을 먼저 받으세요."],
+    sub: "이미 시작한 기수에는 중간에 들어갈 수 없어, 많은 분이 {NEXT} 기수를 기다리며 이름을 올려 두십니다. 지역별 날짜는 모인 인원을 보고 잡기 때문에, 미리 남겨 주신 분께 먼저 전화로 알려 드립니다.",
+    cta: { label: "사전 안내 신청", href: "next-cohort.html" },
+    cta2: { label: "올해 남은 일정", href: "#schedule" },
+    cta2All: { label: "올해 일정 보기", href: "#schedule" },
+  },
+  // 상담 창 안내 줄
+  point: "{NEXT} 기수 대기 문의도 받습니다. 지역 일정이 나오면 먼저 전화드립니다",
+  // 이 주제로 기수가 열린 적이 없는 지역 칸에 붙는 한 문장 — 그 지역에 다음 기수가 있다고 말하지 않는다(10-22 점검)
+  empty: "{NEXT} 과정 소식도 상담 신청으로 미리 받아 보실 수 있습니다.",
+  menu: "{NEXT} 사전 안내",
+};
+
 const YOUTH_CAMP = {
   eyebrow: "Youth Leadership Camp",
   title: ["말하고, 듣고, 이끌어 보는", "청소년 리더십 캠프"],
@@ -78,4 +102,4 @@ const YOUTH_CAMP = {
   courseNote: "청소년 과정은 방학에 사흘짜리 리더십·소통 캠프로 열립니다. 학교·학원·회사 단위의 단체 캠프도 가능하며, 일정과 장소는 신청 인원을 보고 정하기 때문에 상담에서 알려 드립니다.",
 };
 
-module.exports = { NEXT_COHORT, YOUTH_CAMP };
+module.exports = { NEXT_COHORT, YOUTH_CAMP, PREP_COPY };
