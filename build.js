@@ -1821,7 +1821,7 @@ ${ACTIVE.length ? `
 
 <section class="sec${ACTIVE.length ? " sec-alt" : ""}">
   <div class="wrap">
-    ${secHead({ eyebrow: "Started", title: `${YEAR_LABEL} 개강한 기수`, sub: `지금 수업이 진행 중인 기수입니다. 같은 지역의 다음 기수는 ${NEXT_TERM}에 열릴 예정입니다.` })}
+    ${secHead({ eyebrow: "Started", title: `${YEAR_LABEL} 개강한 기수`, sub: `이미 수업을 시작했거나 마친 기수입니다. 같은 지역의 다음 기수는 ${NEXT_TERM}에 열릴 예정입니다.` })}
     ${schedListHtml(past)}
   </div>
 </section>
