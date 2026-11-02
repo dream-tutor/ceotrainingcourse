@@ -66,7 +66,7 @@ const ASSET_OWN = path.join(__dirname, "assets");
 const ASSETS = ["dc-logo-white.png", "dc-logo-black.png", "class-001.jpg", "class-006.jpg", "class-007.jpg", "class-009.jpg", "dale-book.jpg", "og.png"];
 const VER = Date.now().toString(36); // 빌드마다 갱신 — CSS·JS 캐시 어긋남 방지
 
-const fee = (v) => (v == null ? "미정" : v.toLocaleString("ko-KR") + "원");
+const fee = (v) => (v == null ? "상담 시 안내" : v.toLocaleString("ko-KR") + "원");
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const lines = (arr) => arr.map((t) => `<span class="ln">${esc(t)}</span>`).join(" ");
 const tl = (t) => (Array.isArray(t) ? lines(t) : esc(t)); // 제목: 배열이면 줄 단위, 문자열이면 그대로
@@ -122,6 +122,11 @@ const nextOf = (rows) => rows.filter((r) => schedDate(r.open) != null).sort(byOp
 const DAY_LD = { 월: "Monday", 화: "Tuesday", 수: "Wednesday", 목: "Thursday", 금: "Friday", 토: "Saturday", 일: "Sunday" };
 const byDayLd = (day) => String(day || "").split(/[·,\s]+/).map((d) => DAY_LD[d.trim()]).filter(Boolean).map((d) => `https://schema.org/${d}`);
 const nextLabel = (r) => (r ? `${r.open}(${r.day})` : "");
+// 일정 날짜 칸 — YEAR_LABEL(2026 하반기)과 다른 해에 열리는 기수만 연도를 붙인다 ("2027.01.12", 2026-11-02 서울 CEO 104기)
+const BASE_YEAR = parseInt(YEAR_LABEL, 10);
+// '2026 하반기 N개 기수 모집' — 다른 해 개강 기수(2027.01 서울 CEO 104)가 섞이면 연도 라벨을 뺀다
+const termPrefix = (rows) => (rows.some((r) => { const t = schedDate(r.open); return t != null && new Date(t).getUTCFullYear() !== BASE_YEAR; }) ? "" : `${YEAR_LABEL} `);
+const openLabel = (r) => { const t = schedDate(r.open); return t != null && new Date(t).getUTCFullYear() !== BASE_YEAR ? `${new Date(t).getUTCFullYear()}.${r.open}` : r.open; };
 
 // 일정표 필터 = 교육 대상 01~03과 같은 묶음
 const GROUPS = [
@@ -260,7 +265,7 @@ function schedRow(r) {
   const courseName = r.variant && !/대상$/.test(r.variant) ? r.variant : c.name;
   const period = isDayCourse(r) && r.close ? `${r.open}~${r.close} · ${r.weeks}` : `${r.weeks}${r.day ? ` · 매주 ${r.day}요일` : ""}${r.time ? ` ${r.time}` : ""}`;
   return `<li class="sch-row st-${st}" data-groups="${groupsOf(r).join(" ")}" data-region="${r.region}" data-open="${isoDay(schedDate(r.open))}" data-close="${isoDay(closeDate(r))}" data-day="${esc(r.day || "")}" data-label="${esc(r.open)}">
-        <div class="sch-date"><strong>${esc(r.open)}</strong><span>${esc(r.day || "")}</span></div>
+        <div class="sch-date"><strong>${esc(openLabel(r))}</strong><span>${esc(r.day || "")}</span></div>
         <div class="sch-main"><h3><a href="${regionFile(r.region)}">${esc(r.name)}</a>${r.gi ? ` <em>${esc(r.gi)}기</em>` : ""}</h3><p><a href="${courseFile(r.course)}">${esc(courseName)}</a> · ${esc(period)}</p></div>
         <div class="sch-end">
           <div class="sch-fee">${fee(r.fee)}${r.includes ? `<button type="button" class="fee-note" aria-label="${esc(r.name)} 수강료 포함 항목" data-note="${esc(r.includes)}">포함 항목</button>` : ""}</div>
@@ -1176,11 +1181,11 @@ ${near.length ? `
 ${consultHtml({ region: r.name })}`;
   return layout({
     file: regionFile(slug),
-    title: `${r.name} 데일카네기 과정 | ${active.length ? `${YEAR_LABEL} ${active.length}개 기수 모집` : "개강 일정 안내"}`,
+    title: `${r.name} 데일카네기 과정 | ${active.length ? `${termPrefix(active)}${active.length}개 기수 모집` : "개강 일정 안내"}`,
     // 지역마다 다르게 — 실제로 열린 과정, 실제 모집 현황, 그 지역 동문회 유무로 문장을 만든다
     desc: [
       active.length
-        ? `${r.name} 데일카네기 ${courses.map((k) => COURSES[k].code).join("·")} ${YEAR_LABEL} ${active.length}개 기수 모집 중${next ? `, 가장 빠른 개강 ${next.open}` : ""}.`
+        ? `${r.name} 데일카네기 ${courses.map((k) => COURSES[k].code).join("·")} ${termPrefix(active)}${active.length}개 기수 모집 중${next ? `, 가장 빠른 개강 ${next.open}` : ""}.`
         : hasRows
           ? `${r.name}에서 열렸던 데일카네기 ${courses.map((k) => COURSES[k].code).join("·")} 과정, ${NEXT_TERM} 다음 기수 대기 접수.`
           : `${r.name} 지역 데일카네기 과정 개설 문의와 가까운 지역 기수 안내.`,
@@ -1756,7 +1761,7 @@ ${consultHtml(preset)}`;
   return layout({
     file: comboFile(slug, t),
     title: `${name}${active.length ? ` | ${active.length}개 기수 모집` : ""}`,
-    desc: `${R(t.regionLead, r.name)} ${active.length ? `${YEAR_LABEL} ${active.length}개 기수 모집 중${next ? `, 가장 빠른 개강 ${next.open}` : ""}.` : rows.length && PREP ? `다음 기수 ${NEXT_TERM}, 대기 접수.` : "개설 문의와 가까운 지역 기수를 안내합니다."} 담당 ${br.label}.`,
+    desc: `${R(t.regionLead, r.name)} ${active.length ? `${termPrefix(active)}${active.length}개 기수 모집 중${next ? `, 가장 빠른 개강 ${next.open}` : ""}.` : rows.length && PREP ? `다음 기수 ${NEXT_TERM}, 대기 접수.` : "개설 문의와 가까운 지역 기수를 안내합니다."} 담당 ${br.label}.`,
     hero: heroSm({ trail, badge: t.kw, eyebrow: `${br.label} · ${r.name}`, title: [`${r.name}에서 찾는`, t.kw], sub, subHtml, actions: [["상담 신청", "#consult", true], ["개강 일정 보기", "#schedule"]] }),
     body, trail,
     ld: [
@@ -1865,6 +1870,8 @@ function buildYouthCamp() {
   const Y = YOUTH_CAMP;
   const c = COURSES.youth;
   const trail = [HOME, ["과정 안내", "courses.html"], [c.name, courseFile("youth")], ["리더십 캠프", null]];
+  // 2026-11-02 본사 사전 안내(서울 12.28~29, 초6~고1) — 접수 중인 청소년 기수가 있으면 히어로 '일정' 칸에 날짜를 쓴다
+  const youthOpen = ACTIVE.filter((x) => x.course === "youth");
   const body = `<section class="sec">
   <div class="wrap split">
     <div class="prose reveal">
@@ -1937,7 +1944,7 @@ ${consultHtml({ course: CAMP_OPTION })}`;
     file: "youth-leadership-camp.html",
     title: "청소년 리더십 캠프 | 방학 3일 소통·발표 과정",
     desc: "청소년 리더십 캠프, 초·중·고 대상, 방학 3일 소통·발표·관계·리더십 연습, 학교·단체 캠프 가능, 일정·참가비 상담 안내.",
-    hero: heroSm({ trail, badge: "YOUTH", eyebrow: Y.eyebrow, title: Y.title, sub: Y.sub, extra: `<dl class="hero-meta"><div><dt>기간</dt><dd>${esc(c.duration)}</dd></div><div><dt>대상</dt><dd>${esc(c.target)}</dd></div><div><dt>일정</dt><dd>상담 시 안내</dd></div></dl>`, actions: [["캠프 상담 신청", "#consult", true], ["청소년 코스 보기", courseFile("youth")]] }),
+    hero: heroSm({ trail, badge: "YOUTH", eyebrow: Y.eyebrow, title: Y.title, sub: Y.sub, extra: `<dl class="hero-meta"><div><dt>기간</dt><dd>${esc(c.duration)}</dd></div><div><dt>대상</dt><dd>${esc(c.target)}</dd></div><div><dt>일정</dt><dd>${youthOpen.length ? youthOpen.map((x) => esc(`${REGIONS[x.region].name} ${x.open}~${x.close} (${x.weeks}${x.variant ? ", " + x.variant.replace(/ 대상$/, "") : ""})`)).join("<br>") : "상담 시 안내"}</dd></div></dl>`, actions: [["캠프 상담 신청", "#consult", true], ["청소년 코스 보기", courseFile("youth")]] }),
     body, trail,
     ld: [{ "@context": "https://schema.org", "@type": "Course", name: "청소년 리더십 캠프", description: Y.sub, provider: { "@type": "Organization", name: "데일카네기코리아" }, ...(SITE.BASE_URL ? { url: abs("youth-leadership-camp.html") } : {}), dateModified: pageDate("youth-leadership-camp.html") },
       { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: Y.faq.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })) }],

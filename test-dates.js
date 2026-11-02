@@ -56,7 +56,8 @@ for (const t of ["2026-09-22", "2026-11-01", "2026-12-15", "2027-01-10", "2027-0
   const ref = day(t);
   for (const r of SCHEDULE) {
     const { m, d } = mmddOf(r);
-    const actual = Date.UTC(2026, m - 1, d); // 이 데이터가 가리키는 실제 개강일(2026년 하반기 일정)
+    // 이 데이터가 가리키는 실제 개강일 — 2026년 하반기 일정 + 2027년 1~6월 개강분(2026-11-02 서울 CEO 104기 01.12 사전 안내)
+    const actual = Date.UTC(m <= 6 ? 2027 : 2026, m - 1, d);
     if (actual >= ref - 60 * 864e5) continue; // 아직 최근이면 검사 대상 아님
     const st = D.schedStatus(r, ref);
     check(st !== "open" && st !== "soon", `${t} 빌드 · ${r.name} ${r.gi}기(실제 ${iso(actual)})가 ${st} → ${iso(D.schedDate(r.open, ref))}`);
@@ -74,7 +75,8 @@ console.log("5. 오늘 기준 표본");
   const regions = new Set(active.map((r) => r.region)).size;
   console.log(`   모집 중 ${active.length}개 기수 · ${regions}개 지역`);
   // 2026-10-06 세종 CEO 1기가 본사 목록에서 빠져 15·11 → 14·10
-  check(active.length === 14, `모집 기수 ${active.length} (기대 14)`);
+  // 2026-11-02 서울 청소년(12.28)·서울 CEO 104기(2027.01.12) 사전 안내 추가로 14 → 16 (지역은 서울이라 그대로)
+  check(active.length === 16, `모집 기수 ${active.length} (기대 16)`);
   check(regions === 10, `모집 지역 ${regions} (기대 10)`);
 }
 
