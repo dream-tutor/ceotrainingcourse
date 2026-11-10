@@ -510,15 +510,19 @@ function layout({ file, title, desc, body, hero, ld = [], trail = null }) {
   title = fitTitle(title);
   desc = fitDesc(desc);
   PAGE_META.set(file, { title, desc });
-  const url = SITE.BASE_URL ? abs(file) : "";
   // 404는 /a/b/c 같은 하위 주소에서도 뜨기 때문에 상대 경로로는 CSS·JS·링크가 전부 깨진다.
   // 도메인이 정해져 있으면 루트 기준 경로를 쓴다
-  const ROOT = file === "404.html" && SITE.BASE_URL ? "/" : "";
+  const is404 = file === "404.html" && !!SITE.BASE_URL;
+  const ROOT = is404 ? "/" : "";
+  // 404는 /404.html 을 직접 열면 200으로 나간다 — 색인되지 않게 noindex 를 달고 canonical·RSS·og:url 은 넣지 않는다.
+  // <base href> 를 쓰면 '#main' 같은 앵커가 홈(/#main)으로 풀려 건너뛰기 링크가 다른 문서로 간다.
+  // 그래서 base 대신 아래 rootLinks() 로 href·src 를 루트 기준(/)으로 바꾼다(카네기 1과 같은 방식, 2026-11-10 점검)
+  const url = is404 ? "" : (SITE.BASE_URL ? abs(file) : "");
   const ldAll = [...ld];
   const bl = trail && crumbsLd(trail);
   if (bl) ldAll.push(bl);
   const tracker = SITE.TRACKER ? `<script defer src="${SITE.TRACKER.src}" data-site="${SITE.TRACKER.site}"></script>` : "";
-  return `<!DOCTYPE html>
+  const html = `<!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="utf-8">
@@ -526,8 +530,7 @@ function layout({ file, title, desc, body, hero, ld = [], trail = null }) {
 <title>${esc(withSuffix(title))}</title>
 <meta name="description" content="${esc(desc)}">
 ${[["google", SITE.VERIFY_GOOGLE], ["naver", SITE.VERIFY_NAVER]].flatMap(([k, v]) => String(v || "").split(",").map((c) => c.trim()).filter(Boolean).map((c) => `<meta name="${k}-site-verification" content="${esc(c)}">
-`)).join("")}${url ? `${file === "404.html" && SITE.BASE_URL ? `<base href="${SITE.BASE_URL}/">
-` : ""}<link rel="canonical" href="${url}">
+`)).join("")}${url ? `<link rel="canonical" href="${url}">
 <link rel="alternate" type="application/rss+xml" title="${esc(SITE.NAME)}" href="${SITE.BASE_URL}/rss.xml">` : `<meta name="robots" content="noindex">`}
 <meta property="og:type" content="website">
 <meta property="og:title" content="${esc(withSuffix(title))}">
@@ -565,7 +568,12 @@ ${footerHtml(file)}
 ${tracker}
 </body>
 </html>`;
+  return is404 ? rootLinks(html) : html;
 }
+// 404 전용 — 상대 href·src 를 루트 기준으로. 외부 주소·'/'·'#'·tel: 등은 그대로 두고, index.html 은 '/' 로(워커 301 을 거치지 않게)
+const rootLinks = (html) => html
+  .replace(/(?<![\w-])(href|src)="(?!(?:https?:)?\/\/|\/|#|tel:|mailto:|data:|javascript:)([^"]*)"/g, '$1="/$2"')
+  .replace(/href="\/index\.html(?=["#])/g, 'href="/');
 const HOME = ["홈", "index.html"];
 // 짧은 제목에만 사이트명을 덧붙인다. 긴 제목에 붙이면 뒷부분이 잘려 접미사만 보인다
 const withSuffix = (t) => (t.length + SITE.SUFFIX.length <= SUFFIX_MAX ? t + SITE.SUFFIX : t);
