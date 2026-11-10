@@ -1,12 +1,12 @@
 # 데일카네기 두 번째 사이트 (site2)
 
 첫 사이트(`../site`, leadershipcourse.co.kr)와 **같은 데이터를 쓰되 문장과 디자인은 다른** 두 번째 홍보 사이트.
-460개 페이지를 정적으로 생성한다.
+462개 페이지를 정적으로 생성한다(사이트맵은 404 를 뺀 461장).
 
 ## 쓰는 법
 
 ```bash
-node build.js        # docs/ 에 460개 페이지 생성
+node build.js        # docs/ 에 462개 페이지 생성
 node serve.js        # http://localhost:4173 미리보기 (PORT 로 바꿀 수 있다)
 node make-og.js      # 공유 카드(assets/og.png) 다시 뽑기 — src/og.html 을 고쳤을 때만
 ```
@@ -31,7 +31,10 @@ npx wrangler deploy          # wrangler.toml 의 [assets] directory=./docs 를 �
   `/` 는 `src/worker.js` 가 `index.html` 로 이어 준다.
 - `SITE.BASE_URL` 을 비우면 전 페이지가 `noindex` 로 나가고 canonical·sitemap·rss·robots가 빠진다.
   도메인을 바꿀 때만 건드린다.
-- `rss.xml`(네이버 서치어드바이저 제출용)은 조합 페이지를 뺀 75장이다. 날짜는 공개일로 고정했다 —
+- `404.html` 은 없는 주소에 워커가 404 상태로 내주지만 `/404.html` 을 직접 열면 200 이라, `noindex` 를 달고
+  canonical·RSS·og:url 을 넣지 않는다(2026-11-10). `/a/b/c` 같은 하위 주소에서도 뜨므로 `layout()` 의 `rootLinks()` 가
+  href·src 를 루트 기준(`/`)으로 바꾼다. `<base href>` 는 쓰지 않는다 — 쓰면 `#main` 건너뛰기 링크가 홈으로 넘어간다.
+- `rss.xml`(네이버 서치어드바이저 제출용)은 조합 페이지와 404 를 뺀 77장이다. 날짜는 공개일로 고정했다 —
   빌드 날짜를 넣으면 빌드할 때마다 모든 글이 새 글처럼 보인다. 새 페이지를 더하면 `RSS_DATES` 에 그 파일만 그날 날짜로 적는다.
 - `src/worker.js` 는 **http 로 들어온 요청**과 대표 도메인이 아닌 호스트(www 등)를 https 대표 주소로 301 한다(2026-09-29).
 - `/index.html` 직접 요청은 `/` 로 301 한다(2026-09-30, 스쿨링트립과 같음) — 홈 canonical·sitemap 이 `/` 라서. 다른 `.html` 주소는 그대로 200 이다.
@@ -48,13 +51,14 @@ npx wrangler deploy          # wrangler.toml 의 [assets] directory=./docs 를 �
 
 JSON-LD `dateModified`·사이트맵 `lastmod`·푸터 '정보 업데이트'는 `pageDate(file)` 한 값을 쓴다 —
 파일 이름을 시드로 그 달 안의 고정 날짜(1~28일, 아직 안 왔으면 지난달 같은 날, 공개일 09-22보다 앞서지 않음).
-빌드 날짜를 넣지 말 것. 다시 빌드할 때마다 460장이 한꺼번에 '수정됨'이 된다(2026-09-29 점검).
+빌드 날짜를 넣지 말 것. 다시 빌드할 때마다 전 페이지가 한꺼번에 '수정됨'이 된다(2026-09-29 점검).
 
-## 페이지 구성 (460개)
+## 페이지 구성 (462개)
 
 | 묶음 | 수 | 파일 |
 |---|---|---|
 | 단독 | 11 | index, courses, schedule, regions, concerns, topics, corporate, reviews, about, faq, 404 |
+| 사전 안내·캠프 | 2 | next-cohort(다음 기수 사전 안내), youth-leadership-camp(청소년 리더십 캠프) — 2026-10-15 추가 |
 | 과정 상세 | 9 | `course-<key>.html` |
 | 지역 | 24 | `region-<slug>.html` |
 | 고민별 | 12 | `concern-<slug>.html` |
@@ -155,7 +159,7 @@ node build.js && node test-dates.js && node test-pages.js && node test-console.j
 |---|---|
 | `test-dates.js` | 개강·수료일 연도 해석. 빌드 날짜를 24개로 바꿔 가며 미개강 기수가 '종료'로 찍히지 않는지 |
 | `test-pages.js` | 깨진 내부 링크·이미지, id 중복, 페이지당 h1 개수, 템플릿 자국(`undefined`·`{R}`), `#앵커` 유효성, title·description·h1이 페이지마다 다른지, title 60자 초과, 화면 글자에 전화번호 노출, 페이지당 tel 링크 2개 이상, `rss.xml` 링크가 실제 페이지로 이어지는지·중복·날짜 |
-| `test-console.js` | 460개 페이지를 헤드리스 크롬으로 열어 콘솔 오류·예외 수집 (크롬이 설치돼 있어야 한다). 60개마다 크롬을 새로 띄운다 — 탭 하나로 다 돌면 `ERR_INSUFFICIENT_RESOURCES` 가 난다 |
+| `test-console.js` | 462개 페이지를 헤드리스 크롬으로 열어 콘솔 오류·예외 수집 (크롬이 설치돼 있어야 한다). 60개마다 크롬을 새로 띄운다 — 탭 하나로 다 돌면 `ERR_INSUFFICIENT_RESOURCES` 가 난다 |
 | `test-similar.js` | 지역×주제 조합 페이지끼리 얼마나 겹치는지 (위 '페이지 구성' 참고) |
 
 마지막 것이 특히 중요하다. 빌드는 멀쩡히 통과하는데 브라우저에서만 터지는 오류가 있고,
