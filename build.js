@@ -1185,7 +1185,8 @@ ${consultHtml({ region: r.name })}`;
     // 지역마다 다르게 — 실제로 열린 과정, 실제 모집 현황, 그 지역 동문회 유무로 문장을 만든다
     desc: [
       active.length
-        ? `${r.name} 데일카네기 ${courses.map((k) => COURSES[k].code).join("·")} ${termPrefix(active)}${active.length}개 기수 모집 중${next ? `, 가장 빠른 개강 ${next.open}` : ""}.`
+        // '모집 중' 앞에는 지금 접수 중인 기수의 과정만 적는다 — 이미 개강한 과정까지 붙이면 그 과정도 모집 중으로 읽힌다
+        ? `${r.name} 데일카네기 ${COURSE_ORDER.filter((k) => active.some((x) => x.course === k)).map((k) => COURSES[k].code).join("·")} ${termPrefix(active)}${active.length}개 기수 모집 중${next ? `, 가장 빠른 개강 ${next.open}` : ""}.`
         : hasRows
           ? `${r.name}에서 열렸던 데일카네기 ${courses.map((k) => COURSES[k].code).join("·")} 과정, ${NEXT_TERM} 다음 기수 대기 접수.`
           : `${r.name} 지역 데일카네기 과정 개설 문의와 가까운 지역 기수 안내.`,
