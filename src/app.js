@@ -199,6 +199,20 @@
     });
   })();
 
+  // ---------- 청소년 모집 안내 ----------
+  // [data-live-until] = 개강일. 접속 시점에 개강일이 지났으면 모집 요강(.lu-open)을 접고
+  // '개강했습니다' 안내(.lu-past)를 연다 — 제목·설명문·자주 묻는 질문은 다시 빌드해야 바뀐다 (2026-11-17)
+  (() => {
+    const d = new Date();
+    const today = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+    $$("[data-live-until]").forEach((box) => {
+      const o = Date.parse(box.dataset.liveUntil);
+      if (isNaN(o) || o > today) return;
+      $$(".lu-open", box).forEach((el) => { el.hidden = true; });
+      $$(".lu-past", box).forEach((el) => { el.hidden = false; });
+    });
+  })();
+
   // ---------- 개강 일정 ----------
   // (1) 모든 목록: 접속 시점 기준으로 상태를 다시 계산하고 접수 중인 기수를 위로 올린다
   // (2) 필터가 있는 목록(홈·일정 페이지): 대상·지역으로 거르고, 처음에는 가까운 일정만 보여 준다
