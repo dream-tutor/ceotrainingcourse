@@ -1870,7 +1870,7 @@ function youthAdmission(x) {
     // 장소 칸에 지사 이름을 같이 쓰면 강의장 이름처럼 읽힌다(검토 지적) — 지역만 적고 담당 지사는 따로
     ["장소", `${REGIONS[x.region].name} (자세한 장소는 접수하실 때 안내)`],
     ["담당", br.label],
-    ["수강료", x.fee != null ? feeMan(x.fee) : "상담에서 안내"],
+    ["수강료", x.fee != null ? `${feeMan(x.fee)}${x.sibling ? ` (형제·자매 함께 신청 시 ${x.sibling}% 할인, 중복 할인 없음)` : ""}` : "상담에서 안내"],
     ...(x.meal ? [["식사", x.meal]] : []),
     ...(x.cert ? [["수료", `${x.cert} 발급`]] : []),
   ];
